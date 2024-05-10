@@ -169,19 +169,35 @@ for csv_index, uploaded_csv_file in enumerate(
                 index="y_index", columns="x_index", values=count_type
             )
 
-            # color range slider
             color_range = st.slider(
                 label="Color Range Slider: ",
                 min_value=0,  # min is 0
-                # max is max of that heatmap
                 max_value=int(count_table.max().max()),
-                value=(
+                value=( # default range
                     int(count_table.min().min()),
                     int(count_table.max().max()),
-                ),  # default range
+                ),  
                 step=5,
                 key=f"color_range_{csv_index}",
             )
+
+            
+            if normalize_check == True:
+                max_pixel_value = count_table.values.max()
+                count_table = (count_table / max_pixel_value).round(2)
+
+                # color range slider
+                color_range = st.slider(
+                    label="Color Range Slider: ",
+                    min_value=0.0,  # min is 0
+                    max_value=float(count_table.max().max()),
+                    value=( # default range
+                        float(count_table.min().min()),
+                        float(count_table.max().max()),
+                    ),  
+                    step=0.1,
+                    key=f"color_range_normalized_{csv_index}",
+                )
 
             heatmap_fig = create_pixelized_heatmap(
                 df,
