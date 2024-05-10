@@ -1,4 +1,4 @@
-# H3D-data-streamlit
+# Spectrum analyzer
 
 ## Description
 
