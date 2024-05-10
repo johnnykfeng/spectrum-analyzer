@@ -8,7 +8,6 @@ import csv
 import codecs
 import plotly.graph_objects as go
 
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from data_handling_modules import TransformDf
 from plotting_modules import (
     create_spectrum_average,
@@ -37,7 +36,7 @@ def pixel_selectbox(axis, col_index, csv_index):
                 key=f"{axis}_index_{col_index}_{csv_index}"
                 )
 
-st.title("H3D Data Analysis App")
+st.title("Heatmap and Spectrum Analysis")
 
 uploaded_csv_file1, uploaded_csv_file2, uploaded_csv_file3 = None, None, None
 if (
@@ -45,7 +44,7 @@ if (
     and uploaded_csv_file2 is None
     and uploaded_csv_file3 is None
 ):
-    st.subheader("Upload a CSV file at the sidebar to get started.")
+    st.subheader("Upload proper CSV file at the sidebar to get started.")
 
 color_scale = st.sidebar.radio(
     "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
@@ -218,38 +217,8 @@ for csv_index, uploaded_csv_file in enumerate(
                 peak_halfwidth=peak_halfwidth,
             )
             pixel_spectrum_figure.update_layout(
-                title=f"Pixel Spectrum at x = {x_index}, y = {y_index}"
+                title=f"Select Pixel Spectrum"
             )
 
             st.plotly_chart(pixel_spectrum_figure)
 
-            # FOR CALCULATING LEAKING PIXEL RATIO
-            # count_table = df.pivot_table(
-            #     index="y_index", columns="x_index", values=count_type
-            # )
-            # neighbor_index = [
-            #     (x_index - 1, y_index),
-            #     (x_index + 1, y_index),
-            #     (x_index, y_index - 1),
-            #     (x_index, y_index + 1),
-            # ]
-            # neighbor_counts = []
-            # leaking_pixel_count = count_table.loc[y_index, x_index]
-            # st.write(f"Pixel at x={x_index}, y={y_index}: {leaking_pixel_count}")
-            # for j, n in enumerate(neighbor_index):
-            #     if n[0] in count_table.columns and n[1] in count_table.index:
-            #         pixel_count = count_table.loc[n[1], n[0]]
-            #         # st.write(f"n{j+1} at x={n[0]}, y={n[1]}: {pixel_count}")
-            #         neighbor_counts.append(pixel_count)
-            # rounded_neighbor_counts = [round(count, 0) for count in neighbor_counts]
-            # st.write(f"Neighbor counts: {rounded_neighbor_counts}")
-
-            # # average of the neighbor counts
-            # avg_neighbor_counts = np.mean(neighbor_counts)
-            # st.write(f"Average of the neighbor counts: {avg_neighbor_counts:.1f}")
-            # leaking_pixel_ratio = leaking_pixel_count / avg_neighbor_counts
-            # st.write(f"Leaking pixel ratio: {leaking_pixel_ratio:.2f}")
-
-            # pixel_spectrum_figure = create_spectrum_pixel(
-            #     df, bin_peak, peak_halfwidth, None, None, (x_index, y_index)
-            # )
