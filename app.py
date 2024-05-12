@@ -35,6 +35,12 @@ def pixel_selectbox(axis, col_index, csv_index):
                 index=col_index,
                 key=f"{axis}_index_{col_index}_{csv_index}"
                 )
+    
+@st.cache_data
+def convert_df_to_csv(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    df_download = df.drop(columns=['array_bins'])
+    return df_download.to_csv().encode("utf-8")
 
 st.title("Heatmap and Spectrum Analysis")
 
@@ -150,8 +156,15 @@ for csv_index, uploaded_csv_file in enumerate(
         df = TD.add_peak_counts(df, bin_peak=bin_peak,
                                 bin_width=peak_halfwidth)
 
+        csv = convert_df_to_csv(df)
         with st.expander("Show the transformed csv data"):
             st.dataframe(df)
+            st.download_button(
+                label="Download transformed data",
+                data=csv,
+                file_name="transformed.csv",
+                mime="text/csv",
+            )
 
         with st.expander("AVERAGE SPECTRUM", expanded=True):
             avg_spectrum_figure = create_spectrum_average(
