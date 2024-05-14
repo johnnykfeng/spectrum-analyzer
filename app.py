@@ -156,14 +156,15 @@ for csv_index, uploaded_csv_file in enumerate(
         df = TD.add_peak_counts(df, bin_peak=bin_peak,
                                 bin_width=peak_halfwidth)
 
-        csv = convert_df_to_csv(df)
+        csv_file_downloadable = convert_df_to_csv(df)
         with st.expander("Show the transformed csv data"):
             st.dataframe(df)
             st.download_button(
                 label="Download transformed data",
-                data=csv,
+                data=csv_file_downloadable,
                 file_name="transformed.csv",
                 mime="text/csv",
+                key=f"download_button_{csv_index}",
             )
 
         with st.expander("AVERAGE SPECTRUM", expanded=True):
