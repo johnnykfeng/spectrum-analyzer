@@ -58,6 +58,9 @@ color_scale = st.sidebar.radio(
 
 reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
 
+if reverse_color_theme:
+    color_scale = color_scale + "_r"
+
 count_type = st.sidebar.radio(
     "Choose a count type: ", ("total_count", "peak_count",
                               "non_peak_count", "pixel_id")
@@ -65,8 +68,7 @@ count_type = st.sidebar.radio(
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-if reverse_color_theme:
-    color_scale = color_scale + "_r"
+bin_peak_manual = st.sidebar.text_input("Global default bin peak")
 
 uploaded_csv_file1 = st.sidebar.file_uploader(
     "Please upload a CSV file:", type="csv", key="fileUploader1"
@@ -89,6 +91,8 @@ for csv_index, uploaded_csv_file in enumerate(
         filename = (
             filename.lower()
         )  # convert to lowercase for case-insensitive comparison
+
+        # if no default bin peak is provided, use the filename to determine the radiation source and default bin peak
         if filename.endswith("am241.csv"):
             default_bin_peak = "96"
             radiation_source = "Am241"
@@ -99,11 +103,15 @@ for csv_index, uploaded_csv_file in enumerate(
                 radiation_source = "Co57"
             elif "cs137" in filename_no_ext.lower():
                 default_bin_peak = "1558"
-                radiation_source = "Cs137"
-            
+                radiation_source = "Cs137" 
         else:
             radiation_source = "Unknown"
-            default_bin_peak = ""
+        
+        if bin_peak_manual != "":  # if a default bin peak is provided, override the previous value
+            default_bin_peak = bin_peak_manual
+        elif bin_peak_manual == "" and radiation_source == "Unknown":
+            st.error("Please provide a valid bin peak for the uploaded file")
+            raise Exception("Please provide a valid bin peak for the uploaded file")
 
         if uploaded_csv_file.type != "text/csv":
             st.error("Please upload a CSV file:")
