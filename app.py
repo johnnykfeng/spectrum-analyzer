@@ -117,7 +117,13 @@ for csv_index, uploaded_csv_file in enumerate(
             st.error("Please upload a CSV file:")
             raise Exception("Please upload a CSV file")
 
-        rows_to_skip = find_line_number(uploaded_csv_file, "H3D_Pixel")
+        rows_to_skip = find_line_number(uploaded_csv_file, "H3D_Pixel") 
+        if rows_to_skip is None: # try to find "Pixel" if "H3D_Pixel" is not found
+            rows_to_skip = find_line_number(uploaded_csv_file, "Pixel")
+            if rows_to_skip is None:
+                st.error("Please upload a valid CSV file")
+                raise Exception("Please upload a valid CSV file")
+            
         uploaded_csv_file.seek(0)  # reset the file pointer to the beginning
         
         st.divider()
