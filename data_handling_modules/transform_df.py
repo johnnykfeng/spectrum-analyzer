@@ -59,7 +59,7 @@ class TransformDf:
         """
         
         df_bins = df.iloc[:, :] # grab all columns and rows from input DataFrame
-        print(f"Number of bins (columns) in DataFrame: {df_bins.shape[1]}")
+        # print(f"Number of bins (columns) in DataFrame: {df_bins.shape[1]}")
         # if df_bins.shape[1] != 200 and df_bins.shape[1] != 2000:
         #     print(f"{df_bins.shape[1] = }")
         #     raise ValueError("The DataFrame does not have the correct number of bins.")
