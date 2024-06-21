@@ -15,6 +15,8 @@ from plotting_modules import (
     create_pixelized_heatmap,
 )
 
+st.set_page_config("Single CSV dashboard", page_icon="📊")
+
 
 # HELPER FUNCTIONS
 def find_line_number(csv_file, target_string):
