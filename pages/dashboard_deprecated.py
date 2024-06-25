@@ -39,7 +39,7 @@ def convert_df_to_csv(df):
     df_download = df.drop(columns=['array_bins'])
     return df_download.to_csv().encode("utf-8")
 
-st.title("Big Data Dashboard")
+st.title("DEPRECATED Dashboard")
 
 color_scale = st.sidebar.radio(
     "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
@@ -88,14 +88,12 @@ def parse_data(file_path_input):
         peak_halfwidth = peak_halfwidth_input
         df_transformed_list = TD.add_peak_counts_all(bin_peak_input, peak_halfwidth)
 
-    N_MODULES = EM.number_of_modules  # number of dataframes, used for slider
-    N_PIXELS_X = EM.n_pixels_x  # 11 pixels
-    N_PIXELS_Y = EM.n_pixels_y  # 11 pixels
     x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
     y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
     heights = EM.extract_metadata_list(EM.csv_file, "height:")
 
-    return N_MODULES, N_PIXELS_X, N_PIXELS_Y, x_positions, y_positions, heights, df_transformed_list
+    return (EM.number_of_modules, EM.n_pixels_x, EM.n_pixels_y, 
+            x_positions, y_positions, heights, df_transformed_list)
 
 N_MODULES, N_PIXELS_X, N_PIXELS_Y, x_positions, y_positions, heights, df_transformed_list = parse_data(file_path_input)
 
