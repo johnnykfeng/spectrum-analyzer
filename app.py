@@ -1,12 +1,7 @@
 import streamlit as st
 import pandas as pd
-import sys
-import os
-import plotly.express as px
-import numpy as np
 import csv
 import codecs
-import plotly.graph_objects as go
 
 from data_handling_modules import TransformDf
 from plotting_modules import (
