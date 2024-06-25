@@ -62,20 +62,15 @@ class ExtractModuleStreamlit:
         return len(self.df_list)
 
     @staticmethod
-    def extract_metadata_list(csv_file, string_pattern):
+    def extract_metadata_list(csv_file, target_string):
         """Extract metadata values from the csv file.
         """
+        csv_file.seek(0) # reset the file pointer
         text_io = codecs.getreader("utf-8")(csv_file)
         reader = csv.reader(text_io)
-        values = [] 
+        values = []
         for row_index, row in enumerate(reader):
-            for cell in range(3):
-                # check if the search pattern is in the cell
-                if string_pattern in row[cell]:
-                    # get the number value in the next cell
-                    if cell< len(row)-1:
-                        values.append(row[cell+1])
-                    else:
-                        values.append(None)
+            for c, cell in enumerate(row):
+                if target_string in cell:
+                    values.append(row[c+1])
         return values
-
