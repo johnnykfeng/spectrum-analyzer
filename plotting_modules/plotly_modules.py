@@ -180,6 +180,54 @@ def create_spectrum_pixel(
 
     return fig
 
+def create_spectrum_pixel_sweep(
+    df_list, x_index, y_index, 
+    min_data_range, max_data_range, **kwargs,
+):
+    total_num_modules = len(df_list)
+    print(f"Total number of modules: {total_num_modules}")
+    df_list = df_list[min_data_range:max_data_range]
+    fig = go.Figure()
+
+    colormap = px.colors.sequential.RdBu
+    num_of_lines = len(df_list)
+
+    labels = [f"{i}" for i in range(total_num_modules)]
+    if "stage_x_mm" in kwargs:
+        metadata = kwargs["stage_x_mm"]
+        labels = metadata
+
+    for i, df in enumerate(df_list):
+        pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
+        array_bins = pixel_df["array_bins"].values[0]
+        # len_colors = len(px.colors.sequential.Turbo)
+        color = colormap[int(i / num_of_lines * (len(colormap) - 1))]
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(1, len(array_bins) + 1),
+                y=array_bins,
+                name=f"{labels[i+min_data_range]}",
+                line_color=color,
+            )
+        )
+
+    if 'x_range' in kwargs:
+        fig = update_x_axis_range(fig, kwargs['x_range'])
+    if 'y_range' in kwargs:
+        fig = update_y_axis_range(fig, kwargs['y_range'])
+
+
+    fig.update_layout(
+        xaxis_title="Bin Index",
+        yaxis_title="Counts",
+        width=700,
+        height=350,
+        # marker_colorscale=px.colors.sequential.Viridis
+        # colorway=px.colors.sequential.Turbo,
+        # color_continuous_scale = 'viridis',
+    )
+
+    return fig
 
 def create_surface_plot_3d(figure, color_scale):
     # extract the data from the figure

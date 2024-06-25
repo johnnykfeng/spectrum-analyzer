@@ -6,4 +6,5 @@ from .plotly_modules import (
     create_spectrum_pixel,
     create_pixelized_heatmap,
     create_surface_plot_3d,
+    create_spectrum_pixel_sweep,
 )
