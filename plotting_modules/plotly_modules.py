@@ -188,6 +188,7 @@ def create_spectrum_pixel_sweep(
     y_index,
     min_data_range,
     max_data_range,
+    colormap=px.colors.sequential.RdBu_r,
     **kwargs,
 ):
     total_num_modules = len(df_list)
@@ -195,7 +196,6 @@ def create_spectrum_pixel_sweep(
     df_list = df_list[min_data_range:max_data_range]
     fig = go.Figure()
 
-    colormap = px.colors.sequential.RdBu
     num_of_lines = len(df_list)
 
     labels = [f"{i}" for i in range(total_num_modules)]
@@ -206,7 +206,6 @@ def create_spectrum_pixel_sweep(
     for i, df in enumerate(df_list):
         pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
         array_bins = pixel_df["array_bins"].values[0]
-        # len_colors = len(px.colors.sequential.Turbo)
         color = colormap[int(i / num_of_lines * (len(colormap) - 1))]
         fig.add_trace(
             go.Scatter(
@@ -239,14 +238,13 @@ def create_count_sweep(
     count_type,
     min_data_range,
     max_data_range,
+    colormap=px.colors.sequential.RdBu_r,
     **kwargs,
 ):
     total_num_modules = len(df_list)
-    # print(f"Total number of modules: {total_num_modules}")
     df_list = df_list[min_data_range:max_data_range]
     fig = go.Figure()
 
-    colormap = px.colors.sequential.RdBu
     num_of_lines = len(df_list)
 
     labels = [f"{i}" for i in range(total_num_modules)]
@@ -268,11 +266,10 @@ def create_count_sweep(
                 mode="markers",
                 marker_color=color,
                 marker_size=8,
-                # name=f"{labels[i+min_data_range]} mm",
+                name=f"{labels[i+min_data_range]} mm",
             )
         )
-    # print(len(counts))
-    # print(len(labels))
+
 
     fig.add_trace(
         go.Scatter(
@@ -281,7 +278,7 @@ def create_count_sweep(
             mode="lines",
             line=dict(width=0.6),
             line_color="white",
-            # name="Counts trace",
+            name="Counts trace",
         )
     )
 
@@ -293,7 +290,6 @@ def create_count_sweep(
     fig.update_layout(
         xaxis_title="stage_x_mm",
         yaxis_title=f"{count_type}",
-        # remove legend
         showlegend=False,
         # width=700,
         # height=850,
