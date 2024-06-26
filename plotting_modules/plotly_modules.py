@@ -5,8 +5,7 @@ import numpy as np
 
 def calculate_peak_count(array: np.array, peak_bin: int, peak_halfwidth=25):
     """Calculate the counts in a peak given the array and the peak bin number."""
-    peak_count = np.sum(
-        array[peak_bin - peak_halfwidth: peak_bin + peak_halfwidth])
+    peak_count = np.sum(array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth])
     return peak_count
 
 
@@ -98,22 +97,21 @@ def create_spectrum_average(df, **kwargs):
     avg_total_counts = np.sum(df["total_count"].values) / len(df)
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=np.arange(
-        len(avg_array_bins)), y=avg_array_bins))
+    fig.add_trace(go.Scatter(x=np.arange(len(avg_array_bins)), y=avg_array_bins))
 
-    if 'bin_peak' in kwargs:
-        avg_peak_counts = calculate_peak_count(
-            avg_array_bins, kwargs["bin_peak"])
-        if 'peak_halfwidth' in kwargs:
-            fig = add_peak_lines(fig, kwargs["bin_peak"], max(
-                avg_array_bins), kwargs["peak_halfwidth"])
+    if "bin_peak" in kwargs:
+        avg_peak_counts = calculate_peak_count(avg_array_bins, kwargs["bin_peak"])
+        if "peak_halfwidth" in kwargs:
+            fig = add_peak_lines(
+                fig, kwargs["bin_peak"], max(avg_array_bins), kwargs["peak_halfwidth"]
+            )
         else:
             fig = add_peak_lines(fig, kwargs["bin_peak"], max(avg_array_bins))
 
-    if 'x_range' in kwargs:
+    if "x_range" in kwargs:
         fig = update_x_axis_range(fig, kwargs["x_range"])
 
-    if 'y_range' in kwargs:
+    if "y_range" in kwargs:
         fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
@@ -128,7 +126,9 @@ def create_spectrum_average(df, **kwargs):
 
 
 def create_spectrum_pixel(
-    df, *pixel_indices, **kwargs,
+    df,
+    *pixel_indices,
+    **kwargs,
 ):
     fig = go.Figure()
 
@@ -136,12 +136,10 @@ def create_spectrum_pixel(
         if isinstance(pixel_index, tuple):
             x_index, y_index = pixel_index
         else:
-            raise ValueError(
-                "Pixel index must be a tuple of (x_index, y_index)")
+            raise ValueError("Pixel index must be a tuple of (x_index, y_index)")
 
         if (x_index is not None) and (y_index is not None):
-            pixel_df = df[(df["x_index"] == x_index) &
-                          (df["y_index"] == y_index)]
+            pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
             array_bins = pixel_df["array_bins"].values[0]
             fig.add_trace(
                 go.Scatter(
@@ -150,18 +148,21 @@ def create_spectrum_pixel(
                     name=f"Pixel ({x_index}, {y_index})",
                 )
             )
-            if 'bin_peak' in kwargs:
-                if 'peak_halfwidth' in kwargs:
-                    fig = add_peak_lines(fig, kwargs['bin_peak'],
-                                         max(array_bins), kwargs['peak_halfwidth'])
-                else:
+            if "bin_peak" in kwargs:
+                if "peak_halfwidth" in kwargs:
                     fig = add_peak_lines(
-                        fig, kwargs['bin_peak'], max(array_bins))
+                        fig,
+                        kwargs["bin_peak"],
+                        max(array_bins),
+                        kwargs["peak_halfwidth"],
+                    )
+                else:
+                    fig = add_peak_lines(fig, kwargs["bin_peak"], max(array_bins))
 
-    if 'x_range' in kwargs:
-        fig = update_x_axis_range(fig, kwargs['x_range'])
-    if 'y_range' in kwargs:
-        fig = update_y_axis_range(fig, kwargs['y_range'])
+    if "x_range" in kwargs:
+        fig = update_x_axis_range(fig, kwargs["x_range"])
+    if "y_range" in kwargs:
+        fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
         xaxis_title="Bin Index",
@@ -180,12 +181,17 @@ def create_spectrum_pixel(
 
     return fig
 
+
 def create_spectrum_pixel_sweep(
-    df_list, x_index, y_index, 
-    min_data_range, max_data_range, **kwargs,
+    df_list,
+    x_index,
+    y_index,
+    min_data_range,
+    max_data_range,
+    **kwargs,
 ):
     total_num_modules = len(df_list)
-    print(f"Total number of modules: {total_num_modules}")
+    # print(f"Total number of modules: {total_num_modules}")
     df_list = df_list[min_data_range:max_data_range]
     fig = go.Figure()
 
@@ -206,28 +212,99 @@ def create_spectrum_pixel_sweep(
             go.Scatter(
                 x=np.arange(1, len(array_bins) + 1),
                 y=array_bins,
-                name=f"{labels[i+min_data_range]}",
+                name=f"{labels[i+min_data_range]} mm",
                 line_color=color,
             )
         )
 
-    if 'x_range' in kwargs:
-        fig = update_x_axis_range(fig, kwargs['x_range'])
-    if 'y_range' in kwargs:
-        fig = update_y_axis_range(fig, kwargs['y_range'])
-
+    if "x_range" in kwargs:
+        fig = update_x_axis_range(fig, kwargs["x_range"])
+    if "y_range" in kwargs:
+        fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
         xaxis_title="Bin Index",
         yaxis_title="Counts",
-        width=700,
-        height=350,
-        # marker_colorscale=px.colors.sequential.Viridis
-        # colorway=px.colors.sequential.Turbo,
-        # color_continuous_scale = 'viridis',
+        # width=700,
+        # height=650,
     )
 
     return fig
+
+
+def create_count_sweep(
+    df_list,
+    x_index,
+    y_index,
+    count_type,
+    min_data_range,
+    max_data_range,
+    **kwargs,
+):
+    total_num_modules = len(df_list)
+    # print(f"Total number of modules: {total_num_modules}")
+    df_list = df_list[min_data_range:max_data_range]
+    fig = go.Figure()
+
+    colormap = px.colors.sequential.RdBu
+    num_of_lines = len(df_list)
+
+    labels = [f"{i}" for i in range(total_num_modules)]
+    if "stage_x_mm" in kwargs:
+        metadata = kwargs["stage_x_mm"]
+        labels = metadata
+
+    counts = []
+    for i, df in enumerate(df_list):
+        pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
+        count = pixel_df[count_type].values[0]
+        counts.append(count)
+        color = colormap[int(i / num_of_lines * (len(colormap) - 1))]
+
+        fig.add_trace(
+            go.Scatter(
+                x=[labels[i + min_data_range]],
+                y=[count],
+                mode="markers",
+                marker_color=color,
+                marker_size=8,
+                # name=f"{labels[i+min_data_range]} mm",
+            )
+        )
+    # print(len(counts))
+    # print(len(labels))
+
+    fig.add_trace(
+        go.Scatter(
+            x=labels[min_data_range:max_data_range],
+            y=counts,
+            mode="lines",
+            line=dict(width=0.6),
+            line_color="white",
+            # name="Counts trace",
+        )
+    )
+
+    # if 'x_range' in kwargs:
+    #     fig = update_x_axis_range(fig, kwargs['x_range'])
+    # if 'y_range' in kwargs:
+    #     fig = update_y_axis_range(fig, kwargs['y_range'])
+
+    fig.update_layout(
+        xaxis_title="stage_x_mm",
+        yaxis_title=f"{count_type}",
+        # remove legend
+        showlegend=False,
+        # width=700,
+        # height=850,
+    )
+    fig.update_xaxes(showgrid=True, gridwidth=0.1, gridcolor="gray",
+                    #  minor_griddash="dot", 
+                     griddash="dash"
+                     )
+
+    return fig
+
 
 def create_surface_plot_3d(figure, color_scale):
     # extract the data from the figure

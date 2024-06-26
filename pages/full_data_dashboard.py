@@ -7,6 +7,7 @@ from plotting_modules import (
     create_spectrum_pixel,
     create_pixelized_heatmap,
     create_spectrum_pixel_sweep,
+    create_count_sweep
 )
 
 st.set_page_config("Full Data Dashboard", page_icon="📊")
@@ -54,7 +55,7 @@ else:
 
 
 @st.cache_data
-def parse_uploaded_file(uploaded_file, include_background=False):
+def parse_uploaded_file(uploaded_file, bin_peak_input, peak_halfwidth, include_background=False):
     st.write(uploaded_file.name)
     EM = ExtractModuleStreamlit(uploaded_file)
 
@@ -113,7 +114,7 @@ if uploaded_file is not None:
         y_positions,
         heights,
         df_transformed_list,
-    ) = parse_uploaded_file(uploaded_file)
+    ) = parse_uploaded_file(uploaded_file, bin_peak_input, peak_halfwidth_input)
 
     with st.expander("Data Info", expanded=False):
         st.write(f"Number of modules: {N_MODULES}")
@@ -183,27 +184,43 @@ if uploaded_file is not None:
         # st.write(f"Stage X position: {x_positions}")
         # st.write(f"Stage Y position: {y_positions}")
         # st.write(f"Height: {heights}")
+        x_positions = [float(x) for x in x_positions]
+        x_positions = [round(x-x_positions[0], 2) for x in x_positions]
         data_range = st.slider(
             "Select a module:",
-              min_value=0,
-              max_value=N_MODULES-1,
-            value=(0, N_MODULES - 1),
+            min_value=0,
+            max_value=N_MODULES ,
+            value=(0, N_MODULES ),
             step=1,
         )
         columns = st.columns(2)
         with columns[0]:
-            x_choice = pixel_selectbox("X", 1, 101)
+            x_choice = pixel_selectbox("X", "Pixel", 101)
         with columns[1]:
-            y_choice = pixel_selectbox("Y", 2, 102)
+            y_choice = pixel_selectbox("Y", "Pixel", 102)
         spectrum_sweep = create_spectrum_pixel_sweep(
             df_transformed_list,
             x_index=x_choice,
             y_index=y_choice,
             min_data_range=data_range[0],
             max_data_range=data_range[1],
-            x_range=[75,125],
+            x_range=[75, 125],
             y_range=[0, 120],
-            # stage_x_mm=x_positions,
+            stage_x_mm=x_positions,
         )
-
-        st.plotly_chart(spectrum_sweep)
+        with columns[0]:
+            st.plotly_chart(spectrum_sweep)
+        
+        count_sweep = create_count_sweep(
+            df_transformed_list,
+            count_type=count_type,
+            x_index=x_choice,
+            y_index=y_choice,
+            min_data_range=data_range[0],
+            max_data_range=data_range[1],
+            x_range=[75, 125],
+            y_range=[0, 120],
+            stage_x_mm=x_positions,
+        )
+        with columns[1]:
+            st.plotly_chart(count_sweep)
