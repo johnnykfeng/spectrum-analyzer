@@ -63,7 +63,7 @@ def create_pixelized_heatmap(
         index="y_index", columns="x_index", values=count_type
     )
 
-    if normalization == "normalized" or normalization == True:
+    if normalization == "normalized" or normalization:
         max_pixel_value = heatmap_table.values.max()
         heatmap_table = (heatmap_table / max_pixel_value).round(2)
 
@@ -165,7 +165,7 @@ def create_spectrum_pixel(
         fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
-        xaxis_title="Bin Index",
+        xaxis_title="Bin #",
         yaxis_title="Counts",
         width=700,
         height=350,
@@ -211,7 +211,7 @@ def create_spectrum_pixel_sweep(
             go.Scatter(
                 x=np.arange(1, len(array_bins) + 1),
                 y=array_bins,
-                name=f"{labels[i+min_data_range]} mm",
+                name=f"{labels[i+min_data_range]}",
                 line_color=color,
             )
         )
@@ -222,7 +222,7 @@ def create_spectrum_pixel_sweep(
         fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
-        xaxis_title="Bins",
+        xaxis_title="Bin #",
         yaxis_title="Counts",
         # width=700,
         # height=650,
@@ -266,7 +266,7 @@ def create_count_sweep(
                 mode="markers",
                 marker_color=color,
                 marker_size=8,
-                name=f"{labels[i+min_data_range]} mm",
+                name=f"{labels[i+min_data_range]}",
             )
         )
 
