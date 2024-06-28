@@ -39,7 +39,7 @@ count_type = st.sidebar.radio(
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-bin_peak_input = st.sidebar.number_input("Default bin peak", step=1)
+bin_peak_input = st.sidebar.number_input("Default bin peak", step=1, value=95)
 
 peak_halfwidth_input = st.sidebar.number_input(
     "Default peak halfwidth", value=50, step=1
@@ -114,6 +114,9 @@ if "pixel_indices" not in st.session_state:
 if "num_pixels" not in st.session_state:
     st.session_state.num_pixels = 2
 
+if "counts_max_pixel" not in st.session_state:
+    st.session_state.counts_max_pixel = 15
+
 if uploaded_file is not None:
     (
         N_MODULES,
@@ -171,23 +174,33 @@ if uploaded_file is not None:
                     if st.session_state.pixel_indices != [] and c < len(
                         st.session_state.pixel_indices
                     ):
-                        last_x_index = st.session_state.pixel_indices[c][0]
-                        last_y_index = st.session_state.pixel_indices[c][1]
-                        x_index = pixel_selectbox("X", c, module_index, last_x_index)
-                        y_index = pixel_selectbox("Y", c, module_index, last_y_index)
+                        # last_x_index = st.session_state.pixel_indices[c][0]
+                        # last_y_index = st.session_state.pixel_indices[c][1]
+                        x_index = pixel_selectbox("X", c, module_index, st.session_state.pixel_indices[c][0])
+                        y_index = pixel_selectbox("Y", c, module_index, st.session_state.pixel_indices[c][1])
                     else:
                         x_index = pixel_selectbox("X", c, module_index)
                         y_index = pixel_selectbox("Y", c, module_index)
                     pixel_selections.append((x_index, y_index))
 
             st.session_state.pixel_indices = pixel_selections
-            range_slider = st.slider(
-                "range slider (bins)",
-                min_value=0,
-                max_value=199 ,
-                value=(80,120),
-                step=1,)
-                
+            
+
+            
+            sub_columns = st.columns([4, 1], gap="large")
+            with sub_columns[0]:
+                range_slider = st.slider(
+                    "range slider (bins)",
+                    min_value=0,
+                    max_value=199 ,
+                    value=(80,120),
+                    step=1,)
+            with sub_columns[1]:
+                # last_counts_max_pixel = st.session_state.counts_max_pixel
+                st.session_state.counts_max_pixel = st.number_input("Max Counts", 
+                                                   value=st.session_state.counts_max_pixel, step=1,
+                                                    key=f"y_max_{module_index}")
+                    
 
             pixel_spectrum_figure = create_spectrum_pixel(
                 df_transformed_list[module_index],
@@ -195,6 +208,7 @@ if uploaded_file is not None:
                 bin_peak=bin_peak_input,
                 peak_halfwidth=peak_halfwidth_input,
                 x_range=range_slider,
+                y_range=[0, st.session_state.counts_max_pixel],
             )
             pixel_spectrum_figure.update_layout(title="Select Pixel Spectrum")
             
@@ -232,13 +246,6 @@ if uploaded_file is not None:
                     step=1,
                     key="range_slider_x",)
             with sub_columns[1]:
-                # range_slider_y = st.slider(
-                #     "Y-range slider (Counts)",
-                #     min_value=0,
-                #     max_value=500,
-                #     value=(0,120),
-                #     step=1,
-                #     key="range_slider_y",)
                 y_max = st.number_input("Max Counts", value=500, step=1)
             
             # x_choice = pixel_selectbox("X", "Pixel", 101)
@@ -256,7 +263,6 @@ if uploaded_file is not None:
             min_data_range=data_range[0],
             max_data_range=data_range[1],
             x_range=range_slider_x,
-            # y_range=range_slider_y,
             y_range=[0, y_max],
             stage_x_mm=relative_x_positions,
         )

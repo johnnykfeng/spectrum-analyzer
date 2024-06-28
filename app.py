@@ -10,7 +10,16 @@ from plotting_modules import (
     create_pixelized_heatmap,
 )
 
-st.set_page_config("Single CSV dashboard", page_icon="📊")
+from st_pages import Page, Section, show_pages, add_page_title, hide_pages
+
+show_pages([
+    Page("app.py", 
+         "Heatmap and Spectrum Analysis", 
+         "📚"),
+    Page("pages/full_data_dashboard.py", 
+         "Full Data Dashboard", 
+         ":chart_with_upwards_trend:")
+])
 
 
 # HELPER FUNCTIONS
@@ -65,7 +74,16 @@ count_type = st.sidebar.radio(
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-bin_peak_manual = st.sidebar.text_input("Global default bin peak")
+bin_peak_input = st.sidebar.number_input("Default bin peak", value=0, step=1, format="%d")
+bin_peak_input = int(bin_peak_input)
+
+peak_halfwidth_input = st.sidebar.slider(
+    "Peak halfwidth",
+    min_value=1,
+    max_value=50,
+    value=25,
+    key="peak_halfwidth_input",
+)
 
 uploaded_csv_file1 = st.sidebar.file_uploader(
     "Please upload a CSV file:", type="csv", key="fileUploader1"
@@ -104,9 +122,9 @@ for csv_index, uploaded_csv_file in enumerate(
         else:
             radiation_source = "Unknown"
         
-        if bin_peak_manual != "":  # if a default bin peak is provided, override the previous value
-            default_bin_peak = bin_peak_manual
-        elif bin_peak_manual == "" and radiation_source == "Unknown":
+        if bin_peak_input != "":  # if a default bin peak is provided, override the previous value
+            default_bin_peak = bin_peak_input
+        elif bin_peak_input == "" and radiation_source == "Unknown":
             st.error("Please provide a valid bin peak for the uploaded file")
             raise Exception("Please provide a valid bin peak for the uploaded file")
 
@@ -145,27 +163,11 @@ for csv_index, uploaded_csv_file in enumerate(
 
         with st.expander("Show the original csv data"):
             st.dataframe(df)  # display original csv data
-
-        col1, col2 = st.columns(2)
-        with col1:
-            # must have two different sliders for bin width (streamlit needs unique key)
-            peak_halfwidth = st.slider(
-                "Peak halfwidth",
-                min_value=1,
-                max_value=50,
-                value=25,
-                key=f"bin_width_{csv_index}",
-            )
-        with col2:
-            bin_peak = st.text_input(
-                "Bin peak", value=default_bin_peak, key=f"bin_peak_{csv_index}"
-            )
-            bin_peak = int(bin_peak) if bin_peak else None
-
+            
         TD = TransformDf()
         df = TD.transform_df(df)  # transform the data
-        df = TD.add_peak_counts(df, bin_peak=bin_peak,
-                                bin_width=peak_halfwidth)
+        df = TD.add_peak_counts(df, bin_peak=bin_peak_input,
+                                bin_width=peak_halfwidth_input)
 
         csv_file_downloadable = convert_df_to_csv(df)
         with st.expander("Show the transformed csv data"):
@@ -180,7 +182,7 @@ for csv_index, uploaded_csv_file in enumerate(
 
         with st.expander("AVERAGE SPECTRUM", expanded=True):
             avg_spectrum_figure = create_spectrum_average(
-                df, bin_peak=bin_peak, peak_halfwidth=peak_halfwidth
+                df, bin_peak=bin_peak_input, peak_halfwidth=peak_halfwidth_input
             )
 
             avg_spectrum_figure.update_layout(
@@ -189,77 +191,79 @@ for csv_index, uploaded_csv_file in enumerate(
 
             st.plotly_chart(avg_spectrum_figure)
 
-        with st.expander("HEATMAP", expanded=True):
-            count_table = df.pivot_table(
-                index="y_index", columns="x_index", values=count_type
-            )
-
-            color_range = st.slider(
-                label="Color Range Slider: ",
-                min_value=0,  # min is 0
-                max_value=int(count_table.max().max()),
-                value=( # default range
-                    int(count_table.min().min()),
-                    int(count_table.max().max()),
-                ),  
-                step=5,
-                key=f"color_range_{csv_index}",
-            )
-
+        with st.expander("HEATMAP and PIXEL SPECTRUM", expanded=True):
+            columns = st.columns([1,1], gap="large")
             
-            if normalize_check == True:
-                max_pixel_value = count_table.values.max()
-                count_table = (count_table / max_pixel_value).round(2)
-
-                # color range slider
-                color_range = st.slider(
-                    label="Color Range Slider: ",
-                    min_value=0.0,  # min is 0
-                    max_value=float(count_table.max().max()),
-                    value=( # default range
-                        float(count_table.min().min()),
-                        float(count_table.max().max()),
-                    ),  
-                    step=0.1,
-                    key=f"color_range_normalized_{csv_index}",
+            with columns[0]:
+                count_table = df.pivot_table(
+                    index="y_index", columns="x_index", values=count_type
                 )
 
-            heatmap_fig = create_pixelized_heatmap(
-                df,
-                count_type,
-                normalization=normalize_check,
-                color_scale=color_scale,
-                color_range=color_range,
-            )
+                color_range = st.slider(
+                    label="Color Range Slider: ",
+                    min_value=0,  # min is 0
+                    max_value=int(count_table.max().max()),
+                    value=( # default range
+                        int(count_table.min().min()),
+                        int(count_table.max().max()),
+                    ),  
+                    step=5,
+                    key=f"color_range_{csv_index}",
+                )
 
-            heatmap_fig.update_layout(
-                title=f"Heatmap of {uploaded_csv_file.name}")
+                
+                if normalize_check == True:
+                    max_pixel_value = count_table.values.max()
+                    count_table = (count_table / max_pixel_value).round(2)
 
-            st.plotly_chart(heatmap_fig)
+                    # color range slider
+                    color_range = st.slider(
+                        label="Color Range Slider: ",
+                        min_value=0.0,  # min is 0
+                        max_value=float(count_table.max().max()),
+                        value=( # default range
+                            float(count_table.min().min()),
+                            float(count_table.max().max()),
+                        ),  
+                        step=0.1,
+                        key=f"color_range_normalized_{csv_index}",
+                    )
 
-        with st.expander("PIXEL SPECTRUM", expanded=False):
+                heatmap_fig = create_pixelized_heatmap(
+                    df,
+                    count_type,
+                    normalization=normalize_check,
+                    color_scale=color_scale,
+                    color_range=color_range,
+                )
 
-            num_pixels = st.number_input("Number of pixels to display", 
-                                         min_value=1, 
-                                         max_value=10, 
-                                         value=4,
-                                         key=f"num_pixels_{csv_index}")
-            pixel_indices = []
-            for c, column in enumerate(st.columns(num_pixels)):
-                with column:
-                    x_index = pixel_selectbox('X', c, csv_index)
-                    y_index = pixel_selectbox('Y', c, csv_index)
-                    pixel_indices.append((x_index, y_index))
+                heatmap_fig.update_layout(
+                    title=f"Heatmap of {uploaded_csv_file.name}")
+                st.plotly_chart(heatmap_fig)
 
-            pixel_spectrum_figure = create_spectrum_pixel(
-                df,
-                *pixel_indices,
-                bin_peak=bin_peak,
-                peak_halfwidth=peak_halfwidth,
-            )
-            pixel_spectrum_figure.update_layout(
-                title=f"Select Pixel Spectrum"
-            )
+        # with st.expander("PIXEL SPECTRUM", expanded=False):
+            with columns[1]:
+                num_pixels = st.number_input("Number of pixels to display", 
+                                            min_value=1, 
+                                            max_value=10, 
+                                            value=4,
+                                            key=f"num_pixels_{csv_index}")
+                pixel_indices = []
+                for c, column in enumerate(st.columns(num_pixels)):
+                    with column:
+                        x_index = pixel_selectbox('X', c, csv_index)
+                        y_index = pixel_selectbox('Y', c, csv_index)
+                        pixel_indices.append((x_index, y_index))
 
-            st.plotly_chart(pixel_spectrum_figure)
+                pixel_spectrum_figure = create_spectrum_pixel(
+                    df,
+                    *pixel_indices,
+                    bin_peak=bin_peak_input,
+                    peak_halfwidth=peak_halfwidth_input,
+                )
+                pixel_spectrum_figure.update_layout(
+                    title=f"Select Pixel Spectrum"
+                )
+
+                st.plotly_chart(pixel_spectrum_figure)
 
