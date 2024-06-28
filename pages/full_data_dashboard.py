@@ -10,7 +10,8 @@ from plotting_modules import (
     create_count_sweep
 )
 
-st.set_page_config("Full Data Dashboard", page_icon="📊")
+st.set_page_config("Full Data Dashboard", page_icon="📊",
+                   layout="wide", initial_sidebar_state="expanded")
 
 
 @st.cache_data
@@ -43,6 +44,8 @@ bin_peak_input = st.sidebar.number_input("Default bin peak", step=1)
 peak_halfwidth_input = st.sidebar.number_input(
     "Default peak halfwidth", value=50, step=1
 )
+
+st.warning("Only File uploader is working for now")
 upload_type = st.radio("File upload type", ("File uploader", "Directory input"))
 if upload_type == "File uploader":
     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
@@ -133,52 +136,65 @@ if uploaded_file is not None:
         )
         st.plotly_chart(spectrum_avg_fig)
 
-    with st.expander("Count Heatmap", expanded=False):
-        heatmap_fig = create_pixelized_heatmap(
-            df_transformed_list[module_index],
-            count_type=count_type,
-            normalization=normalize_check,
-            color_scale=color_scale,
-        )
-        st.plotly_chart(heatmap_fig)
+    with st.expander("HEATMAP and PIXEL SPECTRUM", expanded=True):
+        
+        plot_columns = st.columns([1, 1])
+        
+        with plot_columns[0]:
+            heatmap_fig = create_pixelized_heatmap(
+                df_transformed_list[module_index],
+                count_type=count_type,
+                normalization=normalize_check,
+                color_scale=color_scale,
+            )
+            st.plotly_chart(heatmap_fig)
+            
+        with plot_columns[1]:
+            
+            num_pixels = st.number_input(
+                "Number of pixels to display",
+                min_value=1,
+                max_value=10,
+                value=st.session_state.num_pixels,
+                key=f"num_pixels_{module_index}",
+            )
+            st.session_state.num_pixels = num_pixels
 
-    with st.expander("PIXEL SPECTRUM", expanded=False):
-        num_pixels = st.number_input(
-            "Number of pixels to display",
-            min_value=1,
-            max_value=10,
-            value=st.session_state.num_pixels,
-            key=f"num_pixels_{module_index}",
-        )
-        st.session_state.num_pixels = num_pixels
+            pixel_selections = []
+            for c, column in enumerate(st.columns(num_pixels)):
+                with column:
+                    # check if st.session_state.pixel_indices is not empty
+                    if st.session_state.pixel_indices != [] and c < len(
+                        st.session_state.pixel_indices
+                    ):
+                        last_x_index = st.session_state.pixel_indices[c][0]
+                        last_y_index = st.session_state.pixel_indices[c][1]
+                        x_index = pixel_selectbox("X", c, module_index, last_x_index)
+                        y_index = pixel_selectbox("Y", c, module_index, last_y_index)
+                    else:
+                        x_index = pixel_selectbox("X", c, module_index)
+                        y_index = pixel_selectbox("Y", c, module_index)
+                    pixel_selections.append((x_index, y_index))
 
-        pixel_selections = []
-        for c, column in enumerate(st.columns(num_pixels)):
-            with column:
-                # check if st.session_state.pixel_indices is not empty
-                if st.session_state.pixel_indices != [] and c < len(
-                    st.session_state.pixel_indices
-                ):
-                    last_x_index = st.session_state.pixel_indices[c][0]
-                    last_y_index = st.session_state.pixel_indices[c][1]
-                    x_index = pixel_selectbox("X", c, module_index, last_x_index)
-                    y_index = pixel_selectbox("Y", c, module_index, last_y_index)
-                else:
-                    x_index = pixel_selectbox("X", c, module_index)
-                    y_index = pixel_selectbox("Y", c, module_index)
-                pixel_selections.append((x_index, y_index))
+            st.session_state.pixel_indices = pixel_selections
+            range_slider = st.slider(
+                "Select a range of bins:",
+                min_value=0,
+                max_value=199 ,
+                value=(80,120),
+                step=1,)
+                
 
-        st.session_state.pixel_indices = pixel_selections
-
-        pixel_spectrum_figure = create_spectrum_pixel(
-            df_transformed_list[module_index],
-            *st.session_state.pixel_indices,
-            bin_peak=bin_peak_input,
-            peak_halfwidth=peak_halfwidth_input,
-        )
-        pixel_spectrum_figure.update_layout(title=f"Select Pixel Spectrum")
-
-        st.plotly_chart(pixel_spectrum_figure)
+            pixel_spectrum_figure = create_spectrum_pixel(
+                df_transformed_list[module_index],
+                *st.session_state.pixel_indices,
+                bin_peak=bin_peak_input,
+                peak_halfwidth=peak_halfwidth_input,
+                x_range=range_slider,
+            )
+            pixel_spectrum_figure.update_layout(title=f"Select Pixel Spectrum")
+            
+            st.plotly_chart(pixel_spectrum_figure)
 
     with st.expander("Sweep analysis", expanded=True):
         # st.write(f"Stage X position: {x_positions}")
@@ -193,19 +209,36 @@ if uploaded_file is not None:
             value=(0, N_MODULES ),
             step=1,
         )
-        columns = st.columns(2)
+        columns = st.columns([1, 1])
         with columns[0]:
-            x_choice = pixel_selectbox("X", "Pixel", 101)
+            range_slider_x = st.slider(
+                "Select a range of bins:",
+                min_value=0,
+                max_value=199 ,
+                value=(80,120),
+                step=1,
+                key="range_slider_x",)
+            range_slider_y = st.slider(
+                "Select a range of counts:",
+                min_value=0,
+                max_value=200,
+                value=(0,120),
+                step=1,
+                key="range_slider_y",)
+            
+            # x_choice = pixel_selectbox("X", "Pixel", 101)
         with columns[1]:
+            x_choice = pixel_selectbox("X", "Pixel", 101)
             y_choice = pixel_selectbox("Y", "Pixel", 102)
+            
         spectrum_sweep = create_spectrum_pixel_sweep(
             df_transformed_list,
             x_index=x_choice,
             y_index=y_choice,
             min_data_range=data_range[0],
             max_data_range=data_range[1],
-            x_range=[75, 125],
-            y_range=[0, 120],
+            x_range=range_slider_x,
+            y_range=range_slider_y,
             stage_x_mm=x_positions,
         )
         with columns[0]:

@@ -222,7 +222,7 @@ def create_spectrum_pixel_sweep(
         fig = update_y_axis_range(fig, kwargs["y_range"])
 
     fig.update_layout(
-        xaxis_title="Bin Index",
+        xaxis_title="Bins",
         yaxis_title="Counts",
         # width=700,
         # height=650,
