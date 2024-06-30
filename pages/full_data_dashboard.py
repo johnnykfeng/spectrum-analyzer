@@ -145,7 +145,7 @@ if "pixel_indices_sweep" not in st.session_state:
 
 if "num_pixels" not in st.session_state:
     st.session_state.num_pixels = 2
-    
+
 if "num_pixels_sweep" not in st.session_state:
     st.session_state.num_pixels_sweep = 4
 
@@ -276,9 +276,9 @@ if uploaded_file is not None:
 
         sub_columns = st.columns([0.35, 0.65], gap="large")
         pixel_selections = []
-        
+
         # placeholder = st.container()
-        
+
         with sub_columns[0]:
             subsub_columns = st.columns([1, 1])
             with subsub_columns[0]:
@@ -294,7 +294,7 @@ if uploaded_file is not None:
                 value=(1, N_MODULES),
                 step=1,
             )
-            
+
         # with placeholder:
         left_panel, right_panel = st.columns([1, 1], gap="large")
         with left_panel:
@@ -328,13 +328,13 @@ if uploaded_file is not None:
         with left_panel:
             spectrum_sweep = create_spectrum_pixel_sweep(
                 df_transformed_list,
-                x_index=x_choice,
-                y_index=y_choice,
-                min_data_range=data_range[0],
-                max_data_range=data_range[1],
+                x_choice,
+                y_choice,
+                data_range[0],
+                data_range[1],
+                x_values[axes_choice],
                 x_range=range_slider_x,
                 y_range=[0, y_max],
-                stage_x_mm=x_values[axes_choice],
             )
             st.plotly_chart(spectrum_sweep)
 
@@ -388,10 +388,9 @@ if uploaded_file is not None:
             x_values[axes_choice],
             *st.session_state.pixel_indices_sweep,
         )
-        
+
         count_sweep_multi_pixel.update_layout(
-            height=800,
-            xaxis_title=f"{axes_choice} Stage Position (px)")
-        
+            height=800, xaxis_title=f"{axes_choice} Stage Position (px)"
+        )
 
         st.plotly_chart(count_sweep_multi_pixel)

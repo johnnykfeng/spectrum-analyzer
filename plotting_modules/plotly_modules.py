@@ -188,30 +188,24 @@ def create_spectrum_pixel_sweep(
     y_index,
     min_data_range,
     max_data_range,
+    x_values,
     colormap=px.colors.sequential.RdBu_r,
     **kwargs,
 ):
-    total_num_modules = len(df_list)
-    # print(f"Total number of modules: {total_num_modules}")
     df_list = df_list[min_data_range:max_data_range]
     fig = go.Figure()
 
     num_of_lines = len(df_list)
 
-    labels = [f"{i}" for i in range(total_num_modules)]
-    if "stage_x_mm" in kwargs:
-        metadata = kwargs["stage_x_mm"]
-        labels = metadata
-
     for i, df in enumerate(df_list):
         pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
         array_bins = pixel_df["array_bins"].values[0]
-        color = colormap[int(i / num_of_lines * (len(colormap) - 1))]
+        color = colormap[int((i/num_of_lines) * (len(colormap)))]
         fig.add_trace(
             go.Scatter(
                 x=np.arange(1, len(array_bins) + 1),
                 y=array_bins,
-                name=f"{labels[i+min_data_range]}",
+                name=f"{x_values[i+min_data_range]}",
                 line_color=color,
             )
         )
@@ -236,7 +230,7 @@ def create_count_sweep(
     count_type,
     min_data_range,
     max_data_range,
-    x_values, 
+    x_values,
     *pixel_indices,
     **kwargs,
 ):
@@ -244,7 +238,7 @@ def create_count_sweep(
     x_values = x_values[min_data_range:max_data_range]
 
     fig = go.Figure()
-    
+
     for pixel_index in pixel_indices:
         if isinstance(pixel_index, tuple):
             x_index, y_index = pixel_index
@@ -256,7 +250,7 @@ def create_count_sweep(
             pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
             count = pixel_df[count_type].values[0]
             counts.append(count)
-        
+
         fig.add_trace(
             go.Scatter(
                 x=x_values,
