@@ -63,7 +63,7 @@ app_defaults = {
         "bin_peak": 1800,
         "peak_halfwidth": 22,
         "max_bin": 1999,
-        "bin_range": (100, 1900),
+        "bin_range": (1500, 1900),
         "max_counts": 500,
     },
 }
@@ -136,13 +136,18 @@ def pixel_selectbox(axis, col_index, csv_index, default_index=1):
     )
 
 
+# use session_state to store default values of widgets
 if "pixel_indices" not in st.session_state:
     st.session_state.pixel_indices = []
-# st.write("Session State Pixel indices")
-# st.write(*st.session_state.pixel_indices)
+
+if "pixel_indices_sweep" not in st.session_state:
+    st.session_state.pixel_indices_sweep = []
 
 if "num_pixels" not in st.session_state:
     st.session_state.num_pixels = 2
+    
+if "num_pixels_sweep" not in st.session_state:
+    st.session_state.num_pixels_sweep = 4
 
 if "counts_max_pixel" not in st.session_state:
     st.session_state.counts_max_pixel = app_defaults[source]["max_counts"]
@@ -206,8 +211,6 @@ if uploaded_file is not None:
                     if st.session_state.pixel_indices != [] and c < len(
                         st.session_state.pixel_indices
                     ):
-                        # last_x_index = st.session_state.pixel_indices[c][0]
-                        # last_y_index = st.session_state.pixel_indices[c][1]
                         x_index = pixel_selectbox(
                             "X", c, module_index, st.session_state.pixel_indices[c][0]
                         )
@@ -264,19 +267,35 @@ if uploaded_file is not None:
     with st.expander("SWEEP ANALYSIS", expanded=True):
         relative_x_positions = [round(x - x_positions[1], 2) for x in x_positions]
         relative_y_positions = [round(y - y_positions[1], 2) for y in y_positions]
-        axes_choice = {"X-abs": x_positions, 
-                       "Y-abs": y_positions, 
-                       "X-relative": relative_x_positions, 
-                       "Y-relative": relative_y_positions}
-        
-        data_range = st.slider(
-            "Modules to include:",
-            min_value=0,
-            max_value=N_MODULES,
-            value=(1, N_MODULES),
-            step=1,
-        )
+        x_values = {
+            "X-abs": x_positions,
+            "Y-abs": y_positions,
+            "X-relative": relative_x_positions,
+            "Y-relative": relative_y_positions,
+        }
 
+        sub_columns = st.columns([0.35, 0.65], gap="large")
+        pixel_selections = []
+        
+        # placeholder = st.container()
+        
+        with sub_columns[0]:
+            subsub_columns = st.columns([1, 1])
+            with subsub_columns[0]:
+                x_choice = pixel_selectbox("X", "Pixel", 101)
+            with subsub_columns[1]:
+                y_choice = pixel_selectbox("Y", "Pixel", 102)
+            pixel_selections.append((x_choice, y_choice))
+        with sub_columns[1]:
+            data_range = st.slider(
+                "Modules to include:",
+                min_value=0,
+                max_value=N_MODULES,
+                value=(1, N_MODULES),
+                step=1,
+            )
+            
+        # with placeholder:
         left_panel, right_panel = st.columns([1, 1], gap="large")
         with left_panel:
             sub_columns = st.columns([3, 1], gap="large")
@@ -298,14 +317,13 @@ if uploaded_file is not None:
                 )
 
         with right_panel:
-            axes_radio = st.radio("sweep axis", ("X-abs", "Y-abs", "X-relative", "Y-relative"),
-                                  horizontal=True, key="axes_radio")
-            
-            sub_columns = st.columns([1, 1])
-            with sub_columns[0]:
-                x_choice = pixel_selectbox("X", "Pixel", 101)
-            with sub_columns[1]:
-                y_choice = pixel_selectbox("Y", "Pixel", 102)
+            count_sweep_plot_placeholder = st.empty()
+            axes_choice = st.radio(
+                "sweep axis",
+                ("X-abs", "Y-abs", "X-relative", "Y-relative"),
+                horizontal=True,
+                key="axes_choice",
+            )
 
         with left_panel:
             spectrum_sweep = create_spectrum_pixel_sweep(
@@ -316,21 +334,64 @@ if uploaded_file is not None:
                 max_data_range=data_range[1],
                 x_range=range_slider_x,
                 y_range=[0, y_max],
-                stage_x_mm = axes_choice[axes_radio],
+                stage_x_mm=x_values[axes_choice],
             )
             st.plotly_chart(spectrum_sweep)
 
-        with right_panel:
-            count_sweep = create_count_sweep(
-                df_transformed_list,
-                count_type=count_type,
-                x_index=x_choice,
-                y_index=y_choice,
-                min_data_range=data_range[0],
-                max_data_range=data_range[1],
-                x_range=[75, 125],
-                y_range=[0, 120],
-                stage_x_mm = axes_choice[axes_radio],
-            )
-            count_sweep.update_layout(xaxis_title=f"{axes_radio} Stage Position (mm)")
-            st.plotly_chart(count_sweep)
+        # with right_panel:
+        count_sweep = create_count_sweep(
+            df_transformed_list,
+            count_type,
+            data_range[0],
+            data_range[1],
+            x_values[axes_choice],
+            *pixel_selections,
+        )
+        count_sweep.update_layout(xaxis_title=f"{axes_choice} Stage Position (px)")
+        count_sweep_plot_placeholder.plotly_chart(count_sweep)
+
+        # with st.expander("SWEEP MULTIPLE PIXELS", expanded=True):
+        num_pixels = st.number_input(
+            "Number of pixels to display",
+            min_value=1,
+            max_value=10,
+            value=st.session_state.num_pixels_sweep,
+            key=f"num_pixels_sweep_key",
+        )
+        st.session_state.num_pixels_sweep = num_pixels
+
+        pixel_selections = []
+        for c, column in enumerate(st.columns(num_pixels)):
+            with column:
+                # check if st.session_state.pixel_indices is not empty
+                if st.session_state.pixel_indices != [] and c < len(
+                    st.session_state.pixel_indices
+                ):
+                    x_index = pixel_selectbox(
+                        "X", c, 101, st.session_state.pixel_indices[c][0]
+                    )
+                    y_index = pixel_selectbox(
+                        "Y", c, 102, st.session_state.pixel_indices[c][1]
+                    )
+                else:
+                    x_index = pixel_selectbox("X", c, 101)
+                    y_index = pixel_selectbox("Y", c, 102)
+                pixel_selections.append((x_index, y_index))
+
+        st.session_state.pixel_indices_sweep = pixel_selections
+
+        count_sweep_multi_pixel = create_count_sweep(
+            df_transformed_list,
+            count_type,
+            data_range[0],
+            data_range[1],
+            x_values[axes_choice],
+            *st.session_state.pixel_indices_sweep,
+        )
+        
+        count_sweep_multi_pixel.update_layout(
+            height=800,
+            xaxis_title=f"{axes_choice} Stage Position (px)")
+        
+
+        st.plotly_chart(count_sweep_multi_pixel)
