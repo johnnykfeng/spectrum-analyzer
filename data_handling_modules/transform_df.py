@@ -14,8 +14,6 @@ class TransformDf:
         # self.extracted_df_list = extracted_df_list
         self.df_transformed_list = []
         self.N_DF = None
-        # self.bin_peak = bin_peak
-        # self.bin_width = bin_width
         self.if_calculate_peak_count = if_calculate_peak_count
 
     @staticmethod
@@ -25,6 +23,20 @@ class TransformDf:
             array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
         )
         return peak_count
+    
+    @staticmethod
+    def calculate_bin_max(array, peak_bin, peak_halfwidth):
+        """Finds the bin with the maximum counts"""
+        cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
+        bin_max = np.argmax(cropped_array) + peak_bin - peak_halfwidth
+        return bin_max
+    
+    @staticmethod
+    def calculate_peak_height(array, peak_bin, peak_halfwidth):
+        """Find the max counts amongst all the bins"""
+        cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
+        peak_height = np.max(cropped_array)
+        return peak_height
 
     @staticmethod
     def avg_neighbor_counts(df, x_index, y_index, count_type='peak_count'):
@@ -59,7 +71,6 @@ class TransformDf:
         """
         
         df_bins = df.iloc[:, :] # grab all columns and rows from input DataFrame
-        # print(f"Number of bins (columns) in DataFrame: {df_bins.shape[1]}")
         # if df_bins.shape[1] != 200 and df_bins.shape[1] != 2000:
         #     print(f"{df_bins.shape[1] = }")
         #     raise ValueError("The DataFrame does not have the correct number of bins.")
@@ -106,7 +117,21 @@ class TransformDf:
         )
         df_new["non_peak_count"] = df_new["total_count"] - df_new["peak_count"]
         
-        return df_new  
+        return df_new
+    
+    def add_bin_max(self, df_new, bin_peak, bin_width):
+        df_new["bin_max"] = df_new["array_bins"].apply(
+            lambda x: self.calculate_bin_max(x, bin_peak, bin_width))
+        
+        return df_new
+
+    def add_peak_height(self, df_new, bin_peak, bin_width):
+        df_new["peak_height"] = df_new["array_bins"].apply(
+            lambda x: self.calculate_peak_height(x, bin_peak, bin_width))
+        
+        return df_new   
+    
+        
 
     def transform_all_df(self, extracted_df_list: List[pd.DataFrame]):
         """
@@ -132,4 +157,12 @@ class TransformDf:
         """Add the peak counts to all the DataFrames in the list."""
         for df_new in self.df_transformed_list:
             df_new = self.add_peak_counts(df_new, bin_peak, bin_width)
+        return self.df_transformed_list
+    
+    def add_bin_max_all(self, bin_peak, bin_width, include_peak_height=True):
+        """Add bin_max and peak_heights to Dataframes"""
+        for df_new in self.df_transformed_list:
+            df_new = self.add_bin_max(df_new, bin_peak, bin_width)
+            if include_peak_height:
+                df_new = self.add_peak_height(df_new, bin_peak, bin_width)
         return self.df_transformed_list

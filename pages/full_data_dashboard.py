@@ -106,6 +106,7 @@ def parse_uploaded_file(
     if bin_peak_input is not None and peak_halfwidth_input is not None:
         peak_halfwidth = peak_halfwidth_input
         df_transformed_list = TD.add_peak_counts_all(bin_peak_input, peak_halfwidth)
+        df_transformed_list = TD.add_bin_max_all(bin_peak_input, peak_halfwidth)
 
     # x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
     # y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
@@ -170,6 +171,7 @@ if uploaded_file is not None:
         st.write(f"Stage X position: {x_positions}")
         st.write(f"Stage Y position: {y_positions}")
         st.write(f"Height: {heights}")
+        st.write(df_transformed_list[1])
 
     # create a slider to select the module
     # module_index = st.sidebar.slider("Select a module:", 0, N_MODULES - 1, 0)
