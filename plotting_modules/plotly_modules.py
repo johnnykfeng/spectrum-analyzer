@@ -232,6 +232,7 @@ def create_count_sweep(
     max_data_range,
     x_values,
     *pixel_indices,
+    include_summed_counts = True,
     **kwargs,
 ):
     df_list = df_list[min_data_range:max_data_range]
@@ -239,6 +240,7 @@ def create_count_sweep(
 
     fig = go.Figure()
 
+    counts_per_pixel = []
     for pixel_index in pixel_indices:
         if isinstance(pixel_index, tuple):
             x_index, y_index = pixel_index
@@ -250,8 +252,9 @@ def create_count_sweep(
             pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
             count = pixel_df[count_type].values[0]
             counts.append(count)
+        counts_per_pixel.append(counts)
 
-        fig.add_trace(
+        fig.add_trace( # lines with labels
             go.Scatter(
                 x=x_values,
                 y=counts,
@@ -264,7 +267,7 @@ def create_count_sweep(
             )
         )
 
-        fig.add_trace(
+        fig.add_trace( # markers
             go.Scatter(
                 x=x_values,
                 y=counts,
@@ -276,6 +279,19 @@ def create_count_sweep(
                 name=f"Pixel ({x_index}, {y_index})",
             )
         )
+    if include_summed_counts:
+        fig.add_trace(  # white dashed line that sum all the count lines
+            go.Scatter(
+                x=x_values,
+                y=np.sum(counts_per_pixel, axis=0),
+                mode="lines",
+                line=dict(width=1, dash="dash"),
+                line_color="white",
+                name="Summed counts",
+            )
+        )
+        
+
 
     fig.update_layout(
         yaxis_title=f"{count_type}",
