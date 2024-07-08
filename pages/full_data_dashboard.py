@@ -276,6 +276,15 @@ if uploaded_file is not None:
         )
         st.plotly_chart(spectrum_avg_fig)
 
+
+    axes_choice = st.radio(
+        "sweep axis",
+        ("X-abs", "Y-abs", "X-relative", "Y-relative"),
+        horizontal=True,
+        key="axes_choice",
+    )
+
+
     with st.expander("SWEEP ANALYSIS", expanded=True):
         relative_x_positions = [round(x - x_positions[1], 2) for x in x_positions]
         relative_y_positions = [round(y - y_positions[1], 2) for y in y_positions]
@@ -330,13 +339,6 @@ if uploaded_file is not None:
 
         with right_panel:
             count_sweep_plot_placeholder = st.empty()
-            axes_choice = st.radio(
-                "sweep axis",
-                ("X-abs", "Y-abs", "X-relative", "Y-relative"),
-                horizontal=True,
-                key="axes_choice",
-            )
-
         with left_panel:
             spectrum_sweep = create_spectrum_pixel_sweep(
                 df_transformed_list,
@@ -362,7 +364,7 @@ if uploaded_file is not None:
         count_sweep.update_layout(xaxis_title=f"{axes_choice} Stage Position (px)")
         count_sweep_plot_placeholder.plotly_chart(count_sweep)
 
-        # with st.expander("SWEEP MULTIPLE PIXELS", expanded=True):
+    with st.expander("SWEEP MULTIPLE PIXELS", expanded=True):
         num_pixels = st.number_input(
             "Number of pixels to display",
             min_value=1,
@@ -392,13 +394,24 @@ if uploaded_file is not None:
 
         st.session_state.pixel_indices_sweep = pixel_selections
 
-        include_summed_counts = st.checkbox("Include summed counts", value=True)
+        cols = st.columns([0.35, 0.65], gap="large")
+        with cols[0]:
+            include_summed_counts = st.checkbox("Include summed counts", value=True)
+        with cols[1]:
+            data_range_2 = st.slider(
+                "Modules to include:",
+                min_value=0,
+                max_value=N_MODULES,
+                value=(1, N_MODULES),
+                step=1,
+                key="data_range_2",
+            )
 
         count_sweep_multi_pixel = create_count_sweep(
             df_transformed_list,
             count_type,
-            data_range[0],
-            data_range[1],
+            data_range_2[0],
+            data_range_2[1],
             x_values[axes_choice],
             include_summed_counts=include_summed_counts,
             *st.session_state.pixel_indices_sweep,
