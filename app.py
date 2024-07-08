@@ -10,6 +10,12 @@ from plotting_modules import (
     create_pixelized_heatmap,
 )
 
+st.set_page_config(
+    "Heatmap and Spectrum Analysis",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 from st_pages import Page, Section, show_pages, add_page_title, hide_pages
 
 show_pages([
