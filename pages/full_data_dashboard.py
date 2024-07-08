@@ -12,7 +12,6 @@ from plotting_modules import (
 
 st.set_page_config(
     "Full Data Dashboard",
-    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -24,26 +23,6 @@ def convert_df_to_csv(df):
     df_download = df.drop(columns=["array_bins"])
     return df_download.to_csv().encode("utf-8")
 
-
-st.title("Full Data Dashboard")
-
-
-color_scale = st.sidebar.radio(
-    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
-)
-
-reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
-
-if reverse_color_theme:
-    color_scale = color_scale + "_r"
-
-count_type = st.sidebar.radio(
-    "Choose a count type: ", ("total_count", "peak_count", "non_peak_count", "pixel_id")
-)
-
-normalize_check = st.sidebar.checkbox("Normalize heatmap")
-
-source = st.sidebar.radio("Radiation Source", ("Am241", "Co57", "Cs137"))
 app_defaults = {
     "Am241": {
         "bin_peak": 95,
@@ -68,26 +47,47 @@ app_defaults = {
     },
 }
 
-bin_peak_input = st.sidebar.number_input(
-    "Default bin peak", step=1, value=app_defaults[source]["bin_peak"]
+st.title(":chart_with_upwards_trend: Full Data Dashboard")
+
+
+color_scale = st.sidebar.radio(
+    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
 )
 
-peak_halfwidth_input = st.sidebar.number_input(
-    "Default peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
+reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
+
+if reverse_color_theme:
+    color_scale = color_scale + "_r"
+
+count_type = st.sidebar.radio(
+    "Choose a count type: ", ("total_count", "peak_count", "non_peak_count", "pixel_id")
 )
 
-# st.write(f"Default bin peak: {app_defaults[source]['bin_range']}")
+normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-st.warning("Only File uploader is working for now")
-upload_type = st.radio("File upload type", ("File uploader", "Directory input"))
-if upload_type == "File uploader":
-    uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-else:
-    file_path_input = st.text_input(
-        "Please enter the file path for excel or csv:",
-        value="R:\H3D-sensor-test\mask_sweep_2024-06-20_ALL_DATA\mask_sweep_2024-06-20.csv",
-        key="file_path_input",
+# st.warning("Only File uploader is working for now")
+col = st.columns([0.25, 0.25, 0.5], gap="large")
+with col[0]:
+    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"))
+with col[1]:
+    bin_peak_input = st.number_input(
+        "approximate bin peak", step=1, value=app_defaults[source]["bin_peak"]
     )
+    peak_halfwidth_input = st.number_input(
+        "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
+    )
+
+with col[2]:
+    # upload_type = st.radio("File upload type", ("File uploader", "Directory input"))
+    # if upload_type == "File uploader":
+    #     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
+    # else:
+    #     file_path_input = st.text_input(
+    #         "Please enter the file path for excel or csv:",
+    #         value="R:\H3D-sensor-test\mask_sweep_2024-06-20_ALL_DATA\mask_sweep_2024-06-20.csv",
+    #         key="file_path_input",
+    #     )
+    uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
 
 
 @st.cache_data
