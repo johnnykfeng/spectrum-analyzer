@@ -108,8 +108,8 @@ def parse_uploaded_file(
         df_transformed_list = TD.add_peak_counts_all(bin_peak_input, peak_halfwidth)
         df_transformed_list = TD.add_bin_max_all(bin_peak_input, peak_halfwidth)
 
-    # x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
-    # y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
+    x_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
+    y_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
     x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_px:")
     y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_px:")
     x_positions = [float(x) for x in x_positions]  # convert list of str to float
@@ -123,17 +123,23 @@ def parse_uploaded_file(
         EM.n_pixels_y,
         x_positions,
         y_positions,
+        x_positions_mm,
+        y_positions_mm,
         heights,
         df_transformed_list,
     )
 
 
-def pixel_selectbox(axis, col_index, csv_index, default_index=1):
+def pixel_selectbox(axis, col_index, module_index, key_str, default_index=1):
+    """
+    axis: str, x or y
+    col_index: int, number of pixels to create
+    module_index: int"""
     return st.selectbox(
         label=f"{axis}-index-{col_index}:",
         options=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
         index=default_index - 1,
-        key=f"{axis}_index_{col_index}_{csv_index}",
+        key=f"{key_str}_{axis}_index_{col_index}_{module_index}",
     )
 
 
@@ -160,6 +166,8 @@ if uploaded_file is not None:
         N_PIXELS_Y,
         x_positions,
         y_positions,
+        x_positions_mm,
+        y_positions_mm,
         heights,
         df_transformed_list,
     ) = parse_uploaded_file(
@@ -191,6 +199,8 @@ if uploaded_file is not None:
                 normalization=normalize_check,
                 color_scale=color_scale,
             )
+
+            st.write(f"X: {x_positions_mm[module_index]} mm,  Y: {y_positions_mm[module_index]} mm")
             heatmap_fig.update_layout(
                 title=f"X-stage: {relative_x_positions[module_index]} px,  Y-stage: {relative_y_positions[module_index]} px"
             )
@@ -214,14 +224,14 @@ if uploaded_file is not None:
                         st.session_state.pixel_indices
                     ):
                         x_index = pixel_selectbox(
-                            "X", c, module_index, st.session_state.pixel_indices[c][0]
+                            "X", c, module_index, "spectrum", st.session_state.pixel_indices[c][0], 
                         )
                         y_index = pixel_selectbox(
-                            "Y", c, module_index, st.session_state.pixel_indices[c][1]
+                            "Y", c, module_index, "spectrum", st.session_state.pixel_indices[c][1]
                         )
                     else:
-                        x_index = pixel_selectbox("X", c, module_index)
-                        y_index = pixel_selectbox("Y", c, module_index)
+                        x_index = pixel_selectbox("X", c, module_index, "spectrum")
+                        y_index = pixel_selectbox("Y", c, module_index, "spectrum")
                     pixel_selections.append((x_index, y_index))
 
             st.session_state.pixel_indices = pixel_selections
@@ -284,9 +294,9 @@ if uploaded_file is not None:
         with sub_columns[0]:
             subsub_columns = st.columns([1, 1])
             with subsub_columns[0]:
-                x_choice = pixel_selectbox("X", "Pixel", 101)
+                x_choice = pixel_selectbox("X", "Pixel", 101, "sweep")
             with subsub_columns[1]:
-                y_choice = pixel_selectbox("Y", "Pixel", 102)
+                y_choice = pixel_selectbox("Y", "Pixel", 102, "sweep")
             pixel_selections.append((x_choice, y_choice))
         with sub_columns[1]:
             data_range = st.slider(
@@ -370,17 +380,19 @@ if uploaded_file is not None:
                     st.session_state.pixel_indices
                 ):
                     x_index = pixel_selectbox(
-                        "X", c, 101, st.session_state.pixel_indices[c][0]
+                        "X", c, 101, "counts_sweep", st.session_state.pixel_indices[c][0]
                     )
                     y_index = pixel_selectbox(
-                        "Y", c, 102, st.session_state.pixel_indices[c][1]
+                        "Y", c, 102, "counts_sweep", st.session_state.pixel_indices[c][1]
                     )
                 else:
-                    x_index = pixel_selectbox("X", c, 101)
-                    y_index = pixel_selectbox("Y", c, 102)
+                    x_index = pixel_selectbox("X", c, 101, "counts_sweep")
+                    y_index = pixel_selectbox("Y", c, 102, "counts_sweep")
                 pixel_selections.append((x_index, y_index))
 
         st.session_state.pixel_indices_sweep = pixel_selections
+
+        include_summed_counts = st.checkbox("Include summed counts", value=True)
 
         count_sweep_multi_pixel = create_count_sweep(
             df_transformed_list,
@@ -388,6 +400,7 @@ if uploaded_file is not None:
             data_range[0],
             data_range[1],
             x_values[axes_choice],
+            include_summed_counts=include_summed_counts,
             *st.session_state.pixel_indices_sweep,
         )
 
