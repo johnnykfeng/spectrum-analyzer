@@ -78,15 +78,6 @@ with col[1]:
     )
 
 with col[2]:
-    # upload_type = st.radio("File upload type", ("File uploader", "Directory input"))
-    # if upload_type == "File uploader":
-    #     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-    # else:
-    #     file_path_input = st.text_input(
-    #         "Please enter the file path for excel or csv:",
-    #         value="R:\H3D-sensor-test\mask_sweep_2024-06-20_ALL_DATA\mask_sweep_2024-06-20.csv",
-    #         key="file_path_input",
-    #     )
     uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
 
 

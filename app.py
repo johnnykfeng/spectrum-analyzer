@@ -27,6 +27,29 @@ show_pages([
          ":chart_with_upwards_trend:")
 ])
 
+app_defaults = {
+    "Am241": {
+        "bin_peak": 95,
+        "peak_halfwidth": 22,
+        "max_bin": 199,
+        "bin_range": (80, 125),
+        "max_counts": 500,
+    },
+    "Co57": {
+        "bin_peak": 243,
+        "peak_halfwidth": 22,
+        "max_bin": 300,
+        "bin_range": (100, 300),
+        "max_counts": 500,
+    },
+    "Cs137": {
+        "bin_peak": 1800,
+        "peak_halfwidth": 22,
+        "max_bin": 1999,
+        "bin_range": (1500, 1900),
+        "max_counts": 500,
+    },
+}
 
 # HELPER FUNCTIONS
 def find_line_number(csv_file, target_string):
@@ -80,16 +103,28 @@ count_type = st.sidebar.radio(
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-bin_peak_input = st.sidebar.number_input("Default bin peak", value=0, step=1, format="%d")
-bin_peak_input = int(bin_peak_input)
+col = st.columns([0.25, 0.25], gap="large")
+with col[0]:
+    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"))
+with col[1]:
+    bin_peak_input = st.number_input(
+        "approximate bin peak", step=1, value=app_defaults[source]["bin_peak"]
+    )
+    peak_halfwidth_input = st.number_input(
+        "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
+    )
 
-peak_halfwidth_input = st.sidebar.slider(
-    "Peak halfwidth",
-    min_value=1,
-    max_value=50,
-    value=25,
-    key="peak_halfwidth_input",
-)
+# bin_peak_input = st.sidebar.number_input("Default bin peak", value=0, step=1, format="%d")
+# bin_peak_input = int(bin_peak_input)
+
+
+# peak_halfwidth_input = st.sidebar.slider(
+#     "Peak halfwidth",
+#     min_value=1,
+#     max_value=50,
+#     value=25,
+#     key="peak_halfwidth_input",
+# )
 
 uploaded_csv_file1 = st.sidebar.file_uploader(
     "Please upload a CSV file:", type="csv", key="fileUploader1"
