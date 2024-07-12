@@ -232,7 +232,7 @@ def create_count_sweep(
     max_data_range,
     x_values,
     *pixel_indices,
-    include_summed_counts = True,
+    include_summed_counts = False,
     **kwargs,
 ):
     df_list = df_list[min_data_range:max_data_range]
