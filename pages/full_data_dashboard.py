@@ -242,7 +242,8 @@ if uploaded_file is not None:
                     "Max Counts",
                     value=st.session_state.counts_max_pixel,
                     step=1,
-                    key=f"y_max_pixel_select",
+                    max_value=None,
+                    key="y_max_pixel_select",
                 )
 
             pixel_spectrum_figure = create_spectrum_pixel(
@@ -263,7 +264,7 @@ if uploaded_file is not None:
             bin_peak=bin_peak_input,
             peak_halfwidth=peak_halfwidth_input,
             x_range=[0, app_defaults[source]["max_bin"]],
-            y_range=[0, app_defaults[source]["max_counts"]],
+            y_range=[0, st.session_state.counts_max_pixel],
         )
         st.plotly_chart(spectrum_avg_fig)
 
@@ -325,6 +326,7 @@ if uploaded_file is not None:
                     "Max Counts",
                     value=app_defaults[source]["max_counts"],
                     step=1,
+                    max_value=None,
                     key="y_max_sweep",
                 )
 
@@ -361,7 +363,7 @@ if uploaded_file is not None:
             min_value=1,
             max_value=10,
             value=st.session_state.num_pixels_sweep,
-            key=f"num_pixels_sweep_key",
+            key="num_pixels_sweep_key",
         )
         st.session_state.num_pixels_sweep = num_pixels
 
