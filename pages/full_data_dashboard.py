@@ -48,6 +48,7 @@ app_defaults = {
 }
 
 st.title(":chart_with_upwards_trend: Full Data Dashboard")
+st.caption("Last updated: 2024-07-12")
 
 
 color_scale = st.sidebar.radio(
