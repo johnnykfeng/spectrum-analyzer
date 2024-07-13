@@ -19,12 +19,12 @@ st.set_page_config(
 from st_pages import Page, Section, show_pages, add_page_title, hide_pages
 
 show_pages([
-    Page("app.py", 
-         "Heatmap and Spectrum Analysis", 
-         "📚"),
     Page("pages/full_data_dashboard.py", 
          "Full Data Dashboard", 
          ":chart_with_upwards_trend:"),
+    Page("app.py", 
+         "Heatmap and Spectrum Analysis", 
+         "📚"),
     Page("pages/displacement_calculator.py",
          "Displacement Calculator",
          ":triangular_ruler:"),
@@ -90,8 +90,8 @@ if (
 ):
     st.subheader("Upload proper CSV file at the sidebar to get started.")
 
-color_scale = st.sidebar.radio(
-    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
+color_scale = st.sidebar.selectbox(
+    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet"),
 )
 
 reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
