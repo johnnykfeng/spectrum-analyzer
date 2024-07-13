@@ -8,6 +8,7 @@ from plotting_modules import (
     create_pixelized_heatmap,
     create_spectrum_pixel_sweep,
     create_count_sweep,
+    add_peak_lines,
 )
 
 st.set_page_config(
@@ -32,11 +33,11 @@ app_defaults = {
         "max_counts": 500,
     },
     "Co57": {
-        "bin_peak": 243,
+        "bin_peak": 246,
         "peak_halfwidth": 22,
         "max_bin": 300,
         "bin_range": (100, 300),
-        "max_counts": 500,
+        "max_counts": 3000,
     },
     "Cs137": {
         "bin_peak": 1800,
@@ -51,8 +52,8 @@ st.title(":chart_with_upwards_trend: Full Data Dashboard")
 st.caption("Last updated: 2024-07-12")
 
 
-color_scale = st.sidebar.radio(
-    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet")
+color_scale = st.sidebar.selectbox(
+    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet"),
 )
 
 reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
@@ -61,7 +62,7 @@ if reverse_color_theme:
     color_scale = color_scale + "_r"
 
 count_type = st.sidebar.radio(
-    "Choose a count type: ", ("total_count", "peak_count", "non_peak_count", "pixel_id")
+    "Choose a data type: ", ("total_count", "peak_count", "non_peak_count", "pixel_id", "bin_max")
 )
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
@@ -180,9 +181,11 @@ if uploaded_file is not None:
         relative_x_positions = [round(x - x_positions[1], 2) for x in x_positions]
         relative_y_positions = [round(y - y_positions[1], 2) for y in y_positions]
 
-        heatmap_panel, pixel_spectrum_panel = st.columns([1, 1])
+        right_top_panel, left_top_panel = st.columns([1, 1])
 
-        with heatmap_panel:
+        with right_top_panel:
+            num_pixels_placeholder = st.empty()
+            
             # create a slider to select the module
             module_index = st.slider("Select a module:", 0, N_MODULES - 1, 0)
             heatmap_fig = create_pixelized_heatmap(
@@ -191,15 +194,7 @@ if uploaded_file is not None:
                 normalization=normalize_check,
                 color_scale=color_scale,
             )
-
-            st.write(f"X: {x_positions_mm[module_index]} mm,  Y: {y_positions_mm[module_index]} mm")
-            heatmap_fig.update_layout(
-                title=f"X-stage: {relative_x_positions[module_index]} px,  Y-stage: {relative_y_positions[module_index]} px"
-            )
-            st.plotly_chart(heatmap_fig)
-
-        with pixel_spectrum_panel:
-            num_pixels = st.number_input(
+            num_pixels = num_pixels_placeholder.number_input(
                 "Number of pixels to display",
                 min_value=1,
                 max_value=10,
@@ -207,6 +202,19 @@ if uploaded_file is not None:
                 key=f"num_pixels_{module_index}",
             )
             st.session_state.num_pixels = num_pixels
+
+            st.write(f"X: {x_positions_mm[module_index]} mm,  Y: {y_positions_mm[module_index]} mm")
+            # st.plotly_chart(heatmap_fig)
+
+        with left_top_panel:
+            # num_pixels = st.number_input(
+            #     "Number of pixels to display",
+            #     min_value=1,
+            #     max_value=10,
+            #     value=st.session_state.num_pixels,
+            #     key=f"num_pixels_{module_index}",
+            # )
+            # st.session_state.num_pixels = num_pixels
 
             pixel_selections = []
             for c, column in enumerate(st.columns(num_pixels)):
@@ -249,14 +257,26 @@ if uploaded_file is not None:
 
             pixel_spectrum_figure = create_spectrum_pixel(
                 df_transformed_list[module_index],
+                True, # include_avg_spectrum
                 *st.session_state.pixel_indices,
                 bin_peak=bin_peak_input,
                 peak_halfwidth=peak_halfwidth_input,
                 x_range=range_slider,
                 y_range=[0, st.session_state.counts_max_pixel],
             )
-            pixel_spectrum_figure.update_layout(title="Select Pixel Spectrum")
+            # pixel_spectrum_figure.update_layout(title="Select Pixel Spectrum",
+            #                                     height=450)
 
+            # st.plotly_chart(pixel_spectrum_figure)
+        plot_columns = st.columns([1, 1], gap="medium")
+        with plot_columns[0]:
+            heatmap_fig.update_layout(
+                title=f"Module #: {module_index}, X-stage: {relative_x_positions[module_index]} px,  Y-stage: {relative_y_positions[module_index]} px"
+            )
+            st.plotly_chart(heatmap_fig)
+        with plot_columns[1]:    
+            pixel_spectrum_figure.update_layout(title="Select Pixel Spectrum",
+                                                height=550)
             st.plotly_chart(pixel_spectrum_figure)
 
     with st.expander("Average Spectrum", expanded=False):
@@ -344,6 +364,12 @@ if uploaded_file is not None:
                 x_range=range_slider_x,
                 y_range=[0, y_max],
             )
+            spectrum_sweep = add_peak_lines(
+                spectrum_sweep,
+                bin_peak_input,
+                app_defaults[source]["max_counts"],
+                peak_halfwidth=peak_halfwidth_input,
+            )
             st.plotly_chart(spectrum_sweep)
 
         # with right_panel:
@@ -414,5 +440,11 @@ if uploaded_file is not None:
         count_sweep_multi_pixel.update_layout(
             height=800, xaxis_title=f"{axes_choice} Stage Position (px)"
         )
+        # count_sweep_multi_pixel = add_peak_lines(
+        #     count_sweep_multi_pixel,
+        #     bin_peak_input,
+        #     app_defaults[source]["max_counts"],
+        #     peak_halfwidth=peak_halfwidth_input,
+        # )
 
         st.plotly_chart(count_sweep_multi_pixel)
