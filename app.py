@@ -24,7 +24,10 @@ show_pages([
          "📚"),
     Page("pages/full_data_dashboard.py", 
          "Full Data Dashboard", 
-         ":chart_with_upwards_trend:")
+         ":chart_with_upwards_trend:"),
+    Page("pages/displacement_calculator.py",
+         "Displacement Calculator",
+         ":triangular_ruler:"),
 ])
 
 app_defaults = {
