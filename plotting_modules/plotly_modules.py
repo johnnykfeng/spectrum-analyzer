@@ -10,31 +10,31 @@ def calculate_peak_count(array: np.array, peak_bin: int, peak_halfwidth=25):
 
 
 def add_peak_lines(fig, bin_peak, max_y, peak_halfwidth=25):
-    fig.add_shape(
+    fig.add_shape( # vertical line at the peak bin
         type="line",
         x0=bin_peak,
         y0=0,
         x1=bin_peak,
         y1=max_y,
-        line=dict(color="red", width=2),
-        opacity=0.4,
+        line=dict(color="gray", width=2),
+        opacity=0.8,
     )
-    fig.add_shape(
+    fig.add_shape( # vertical line at the left bound
         type="line",
         x0=bin_peak - peak_halfwidth,
         y0=0,
         x1=bin_peak - peak_halfwidth,
         y1=max_y,
-        line=dict(color="red", width=1, dash="dash"),
+        line=dict(color="gray", width=1, dash="dash"),
         opacity=0.5,
     )
-    fig.add_shape(
+    fig.add_shape( # vertical line at the right bound
         type="line",
         x0=bin_peak + peak_halfwidth,
         y0=0,
         x1=bin_peak + peak_halfwidth,
         y1=max_y,
-        line=dict(color="red", width=1, dash="dash"),
+        line=dict(color="gray", width=1, dash="dash"),
         opacity=0.5,
     )
 
@@ -127,6 +127,7 @@ def create_spectrum_average(df, **kwargs):
 
 def create_spectrum_pixel(
     df,
+    include_avg_spectrum,
     *pixel_indices,
     **kwargs,
 ):
@@ -158,6 +159,22 @@ def create_spectrum_pixel(
                     )
                 else:
                     fig = add_peak_lines(fig, kwargs["bin_peak"], max(array_bins))
+                    
+    if include_avg_spectrum:
+        summed_array_bins = np.sum(df["array_bins"].values, axis=0)
+        avg_array_bins = summed_array_bins / len(df)
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(len(avg_array_bins)),
+                y=avg_array_bins,
+                name="Average Spectrum",
+                line=dict(
+                    dash = "dash",
+                    color="rgba(128, 128, 128, 0.5)",
+                    width=4,
+                ),
+            )
+        )
 
     if "x_range" in kwargs:
         fig = update_x_axis_range(fig, kwargs["x_range"])
