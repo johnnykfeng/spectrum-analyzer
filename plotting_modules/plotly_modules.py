@@ -302,8 +302,9 @@ def create_count_sweep(
                 x=x_values,
                 y=np.sum(counts_per_pixel, axis=0),
                 mode="lines",
-                line=dict(width=1, dash="dash"),
-                line_color="white",
+                line=dict(width=3, dash="dash"),
+                line_color="gray",
+                opacity=0.8,
                 name="Summed counts",
             )
         )
@@ -325,81 +326,6 @@ def create_count_sweep(
     )
 
     return fig
-
-
-# def create_count_sweep_old(
-#     df_list,
-#     x_index,
-#     y_index,
-#     count_type,
-#     min_data_range,
-#     max_data_range,
-#     colormap=px.colors.sequential.RdBu_r,
-#     *pixel_indices,
-#     **kwargs,
-# ):
-#     total_num_modules = len(df_list)
-#     df_list = df_list[min_data_range:max_data_range]
-#     fig = go.Figure()
-
-#     num_of_lines = len(df_list)
-
-#     labels = [f"{i}" for i in range(total_num_modules)]
-#     if "stage_x_mm" in kwargs:
-#         metadata = kwargs["stage_x_mm"]
-#         labels = metadata
-#     print(f"{labels = }")
-
-#     counts = []
-#     for i, df in enumerate(df_list):
-#         pixel_df = df[(df["x_index"] == x_index) & (df["y_index"] == y_index)]
-#         count = pixel_df[count_type].values[0]
-#         counts.append(count)
-#         # color = colormap[int(i / num_of_lines * (len(colormap) - 1))]
-
-#     x_values = labels[min_data_range:max_data_range]
-#     fig.add_trace(
-#         go.Scatter(
-#             x=x_values,
-#             y=counts,
-#             mode="markers",
-#             marker=dict(size=8, color=x_values, colorscale="RdBu_r", showscale=True),
-#             # name=f"{x_values}",
-#         )
-#     )
-
-#     fig.add_trace(  # white line to connect the markers
-#         go.Scatter(
-#             x=labels[min_data_range:max_data_range],
-#             y=counts,
-#             mode="lines",
-#             line=dict(width=0.6),
-#             line_color="white",
-#             name="Counts trace",
-#         )
-#     )
-
-#     # if 'x_range' in kwargs:
-#     #     fig = update_x_axis_range(fig, kwargs['x_range'])
-#     # if 'y_range' in kwargs:
-#     #     fig = update_y_axis_range(fig, kwargs['y_range'])
-
-#     fig.update_layout(
-#         yaxis_title=f"{count_type}",
-#         showlegend=False,
-#         # width=700,
-#         # height=850,
-#     )
-#     fig.update_xaxes(
-#         showgrid=True,
-#         gridwidth=0.1,
-#         gridcolor="gray",
-#         #  minor_griddash="dot",
-#         griddash="dash",
-#     )
-
-#     return fig
-
 
 def create_surface_plot_3d(figure, color_scale):
     # extract the data from the figure
