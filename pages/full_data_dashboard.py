@@ -34,7 +34,7 @@ app_defaults = {
     },
     "Co57": {
         "bin_peak": 246,
-        "peak_halfwidth": 22,
+        "peak_halfwidth": 50,
         "max_bin": 300,
         "bin_range": (100, 300),
         "max_counts": 3000,
@@ -207,14 +207,6 @@ if uploaded_file is not None:
             # st.plotly_chart(heatmap_fig)
 
         with left_top_panel:
-            # num_pixels = st.number_input(
-            #     "Number of pixels to display",
-            #     min_value=1,
-            #     max_value=10,
-            #     value=st.session_state.num_pixels,
-            #     key=f"num_pixels_{module_index}",
-            # )
-            # st.session_state.num_pixels = num_pixels
 
             pixel_selections = []
             for c, column in enumerate(st.columns(num_pixels)):
@@ -320,6 +312,15 @@ if uploaded_file is not None:
             with subsub_columns[1]:
                 y_choice = pixel_selectbox("Y", "Pixel", 102, "sweep")
             pixel_selections.append((x_choice, y_choice))
+            range_slider_x = st.slider(
+                "X-range slider (bins)",
+                min_value=0,
+                max_value=app_defaults[source]["max_bin"],
+                value=app_defaults[source]["bin_range"],
+                step=1,
+                key="range_slider_x",
+            )
+
         with sub_columns[1]:
             data_range = st.slider(
                 "Modules to include:",
@@ -329,27 +330,16 @@ if uploaded_file is not None:
                 step=1,
             )
 
+            y_max = st.number_input(
+                "Max Counts",
+                value=app_defaults[source]["max_counts"],
+                step=1,
+                max_value=None,
+                key="y_max_sweep",
+            )
+
         # with placeholder:
         left_panel, right_panel = st.columns([1, 1], gap="large")
-        with left_panel:
-            sub_columns = st.columns([3, 1], gap="large")
-            with sub_columns[0]:
-                range_slider_x = st.slider(
-                    "X-range slider (bins)",
-                    min_value=0,
-                    max_value=app_defaults[source]["max_bin"],
-                    value=app_defaults[source]["bin_range"],
-                    step=1,
-                    key="range_slider_x",
-                )
-            with sub_columns[1]:
-                y_max = st.number_input(
-                    "Max Counts",
-                    value=app_defaults[source]["max_counts"],
-                    step=1,
-                    max_value=None,
-                    key="y_max_sweep",
-                )
 
         with right_panel:
             count_sweep_plot_placeholder = st.empty()
@@ -438,13 +428,9 @@ if uploaded_file is not None:
         )
 
         count_sweep_multi_pixel.update_layout(
-            height=800, xaxis_title=f"{axes_choice} Stage Position (px)"
+            height=800, 
+            xaxis_title=f"{axes_choice} Stage Position (px)"
         )
-        # count_sweep_multi_pixel = add_peak_lines(
-        #     count_sweep_multi_pixel,
-        #     bin_peak_input,
-        #     app_defaults[source]["max_counts"],
-        #     peak_halfwidth=peak_halfwidth_input,
-        # )
+  
 
         st.plotly_chart(count_sweep_multi_pixel)
