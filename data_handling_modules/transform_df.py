@@ -24,18 +24,38 @@ class TransformDf:
         )
         return peak_count
     
+    # @staticmethod
+    # def calculate_bin_max(array, peak_bin, peak_halfwidth):
+    #     """Finds the bin with the maximum counts"""
+    #     cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
+    #     bin_max = np.argmax(cropped_array) + peak_bin - peak_halfwidth
+    #     return bin_max
+    
+    # @staticmethod
+    # def calculate_peak_height(array, peak_bin, peak_halfwidth):
+    #     """Find the max counts amongst all the bins"""
+    #     cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
+    #     peak_height = np.max(cropped_array)
+    #     return peak_height
+
     @staticmethod
-    def calculate_bin_max(array, peak_bin, peak_halfwidth):
+    def calculate_bin_max(array, peak_bin, peak_halfwidth, threshold):
         """Finds the bin with the maximum counts"""
+        # array = df["array_bins"]
         cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
+        peak_height = np.max(cropped_array)
+        if peak_height < threshold:
+            return peak_bin-peak_halfwidth
         bin_max = np.argmax(cropped_array) + peak_bin - peak_halfwidth
         return bin_max
-    
+
     @staticmethod
-    def calculate_peak_height(array, peak_bin, peak_halfwidth):
+    def calculate_peak_height(array, peak_bin, peak_halfwidth, threshold):
         """Find the max counts amongst all the bins"""
         cropped_array = array[peak_bin - peak_halfwidth : peak_bin + peak_halfwidth]
         peak_height = np.max(cropped_array)
+        # if peak_height < threshold:
+        #     return np.nan
         return peak_height
 
     @staticmethod
@@ -119,15 +139,15 @@ class TransformDf:
         
         return df_new
     
-    def add_bin_max(self, df_new, bin_peak, bin_width):
+    def add_bin_max(self, df_new, bin_peak, bin_width, threshold):
         df_new["bin_max"] = df_new["array_bins"].apply(
-            lambda x: self.calculate_bin_max(x, bin_peak, bin_width))
+            lambda x: self.calculate_bin_max(x, bin_peak, bin_width, threshold))
         
         return df_new
 
-    def add_peak_height(self, df_new, bin_peak, bin_width):
+    def add_peak_height(self, df_new, bin_peak, bin_width, threshold):
         df_new["peak_height"] = df_new["array_bins"].apply(
-            lambda x: self.calculate_peak_height(x, bin_peak, bin_width))
+            lambda x: self.calculate_peak_height(x, bin_peak, bin_width, threshold))
         
         return df_new   
     
@@ -159,10 +179,10 @@ class TransformDf:
             df_new = self.add_peak_counts(df_new, bin_peak, bin_width)
         return self.df_transformed_list
     
-    def add_bin_max_all(self, bin_peak, bin_width, include_peak_height=True):
+    def add_bin_max_all(self, bin_peak, bin_width, threshold, include_peak_height=True):
         """Add bin_max and peak_heights to Dataframes"""
         for df_new in self.df_transformed_list:
-            df_new = self.add_bin_max(df_new, bin_peak, bin_width)
+            df_new = self.add_bin_max(df_new, bin_peak, bin_width, threshold)
             if include_peak_height:
-                df_new = self.add_peak_height(df_new, bin_peak, bin_width)
+                df_new = self.add_peak_height(df_new, bin_peak, bin_width, threshold)
         return self.df_transformed_list
