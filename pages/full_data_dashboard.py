@@ -78,6 +78,9 @@ with col[1]:
     peak_halfwidth_input = st.number_input(
         "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
     )
+    peak_threshold_input = st.number_input(
+        "peak threshold", value=60, step=1
+    )
 
 with col[2]:
     uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
@@ -85,7 +88,7 @@ with col[2]:
 
 @st.cache_data
 def parse_uploaded_file(
-    uploaded_file, bin_peak_input, peak_halfwidth, modules_to_skip=0
+    uploaded_file, bin_peak_input, peak_halfwidth, peak_threshold, modules_to_skip=0
 ):
     st.write(uploaded_file.name)
     EM = ExtractModuleStreamlit(uploaded_file)
@@ -99,7 +102,7 @@ def parse_uploaded_file(
     if bin_peak_input is not None and peak_halfwidth_input is not None:
         peak_halfwidth = peak_halfwidth_input
         df_transformed_list = TD.add_peak_counts_all(bin_peak_input, peak_halfwidth)
-        df_transformed_list = TD.add_bin_max_all(bin_peak_input, peak_halfwidth)
+        df_transformed_list = TD.add_bin_max_all(bin_peak_input, peak_halfwidth, peak_threshold)
 
     x_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
     y_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
@@ -164,7 +167,8 @@ if uploaded_file is not None:
         heights,
         df_transformed_list,
     ) = parse_uploaded_file(
-        uploaded_file, bin_peak_input, peak_halfwidth_input, modules_to_skip=0
+        uploaded_file, bin_peak_input, peak_halfwidth_input, 
+        peak_threshold_input, modules_to_skip=0
     )
 
     with st.expander("Data Info", expanded=False):
