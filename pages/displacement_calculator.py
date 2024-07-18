@@ -13,14 +13,13 @@ def divergence_angle(H, b):
     half_angle = math.degrees(math.atan(b*0.5 / H))
     return 2*half_angle
 
-
 def displacement(angle, h):
     return h * math.tan(math.radians(angle))
 
 def spot_diameter(H, h, hole_size=HOLE_DIAMETER):
-    angle = divergence_angle(H, HOLE_DIAMETER)
+    angle = divergence_angle(H, hole_size)
     d = displacement(angle, h)
-    spot_diameter = 2 * d + HOLE_DIAMETER
+    spot_diameter = 2 * d + hole_size
     return spot_diameter
     
 H = st.number_input("H (mm), height of source from mask",

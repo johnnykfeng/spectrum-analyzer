@@ -1,5 +1,6 @@
 grid_plots/
 sample_data/
+ignore/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
