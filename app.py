@@ -28,6 +28,9 @@ show_pages([
     Page("pages/displacement_calculator.py",
          "Displacement Calculator",
          ":triangular_ruler:"),
+    Page("pages/hole_projection.py",
+            "Hole Projection",
+            ":mag:"),
 ])
 
 app_defaults = {
