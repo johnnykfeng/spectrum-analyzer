@@ -31,6 +31,9 @@ show_pages([
     Page("pages/hole_projection.py",
             "Hole Projection",
             ":mag:"),
+    Page("pages/intensity_projection.py",
+            "Intensity Projection",
+            ":bulb:"),
 ])
 
 app_defaults = {
