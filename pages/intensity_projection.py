@@ -89,7 +89,7 @@ def plot_intensity(H, fixed_clim=True, colormap_input="jet"):
     return fig, ax
 
 
-def plot_intensity_px(H, colormap_input="jet"):
+def plot_intensity_px(H, colormap_input="jet", fixed_clim=True):
     """
     Plots the projected intensity on a flat plane with filled contour lines.
     """
@@ -104,16 +104,43 @@ def plot_intensity_px(H, colormap_input="jet"):
     I0 = 4 * math.pi * H**2
     Z = relative_intensity(R, I0=I0)
 
-    fig = go.Figure(
-        data=go.Contour(
-            z=Z,
-            x=x,
-            y=y,
-            colorscale=colormap_input,
-            contours=dict(start=0, end=1),
+    if fixed_clim:
+        fig = go.Figure(
+            data=go.Contour(
+                z=Z,
+                x=x,
+                y=y,
+                colorscale=colormap_input,
+                contours=dict(start=0, end=1),
+                hovertemplate="z: %{z:.2f}<extra></extra>"
+            )
         )
+    else:
+        fig = go.Figure(
+            data=go.Contour(
+                z=Z,
+                x=x,
+                y=y,
+                colorscale=colormap_input,
+                hovertemplate="z: %{z:.2f}<extra></extra>"
+            )
+        )
+        
+    # add box with borders at x = -11, 11 and y = -11, 11
+    fig.add_shape(
+        type="rect",
+        x0=-11,
+        y0=-11,
+        x1=11,
+        y1=11,
+        line=dict(
+            color="black",
+            width=2,
+        ),
+        fillcolor="rgba(0,0,0,0)", 
+        opacity=0.5
     )
-
+    
     return fig
 
 
@@ -124,7 +151,7 @@ with st.expander("Matplotlib Figure", expanded=True):
     st.pyplot(fig)
 
 
-fig = plot_intensity_px(height, colormap_input=colormap)
+fig = plot_intensity_px(height, colormap_input=colormap, fixed_clim=fixed_color_limits)
 fig.update_layout(
     title=f"Projected Intensity @ {height=}",
     xaxis_title="x (mm)",
