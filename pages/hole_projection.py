@@ -6,9 +6,17 @@ import numpy as np
 st.title("Hole Projections")
 
 with st.expander("Constants"):
-    PIXEL_PITCH = st.number_input("Pixel pitch (mm)", value=1.894)
-    HOLE_DIAMETER = st.number_input("Mask hole diameter (mm)", value=0.75)
+    PIXEL_PITCH = st.number_input("Pixel pitch (mm)", value=1.894, format = "%f", key = "pixel_pitch")
+    HOLE_DIAMETER = st.number_input("Mask hole diameter (mm)", value=0.75, key = "hole_diameter")
+    HOLE_PITCH = st.number_input("Mask hole pitch (mm)", value=3*PIXEL_PITCH, format= "%.3f", key = "hole_pitch")
+
+# st.write(st.session_state["hole_diameter"])
     
+with st.expander("Schematic drawing of geometry:"):
+    # show image of assets/hole_projection_fig.png
+    st.image("assets/hole_projection_fig.png", use_column_width=True)
+    
+
 cols = st.columns(3)
 
 with cols[0]:
@@ -42,9 +50,9 @@ def mask_hole_positions(HOLE_PITCH, MASK_OFFSET_X, MASK_OFFSET_Y):
     return hole_positions, x_mesh, y_mesh
 
 def projection(h, H, POINT_SOURCE, MASK_POSITIrON, 
-               PIXEL_PITCH=1.894, HOLE_DIAMETER=0.75):
+               PIXEL_PITCH=st.session_state["pixel_pitch"], HOLE_DIAMETER=st.session_state["hole_diameter"]):
     hole_positions, x_mesh, y_mesh = mask_hole_positions(
-        3*PIXEL_PITCH, MASK_POSITION[0], MASK_POSITION[1])
+        HOLE_PITCH, MASK_POSITION[0], MASK_POSITION[1])
 
     x_distances = x_mesh - POINT_SOURCE[0]
     y_distances = y_mesh - POINT_SOURCE[1]
@@ -60,22 +68,22 @@ def projection(h, H, POINT_SOURCE, MASK_POSITIrON,
     # diagonal_shifts = diagonals * h / H
     return x_projected, y_projected, diameters
 
-def draw_grid_figure(PIXEL_PITCH=1.894, GRID_SIZE=11):
+def draw_grid_figure(pixel_pitch=st.session_state["pixel_pitch"], grid_size=11):
     # Create a figure and an axes
     fig, ax = plt.subplots(figsize=(8, 8))
 
     # Calculate the offset to center the grid
-    offset = (GRID_SIZE * PIXEL_PITCH) / 2
+    offset = (grid_size * pixel_pitch) / 2
 
     # Add squares to the axes
-    for i in range(GRID_SIZE):
-        for j in range(GRID_SIZE):
-            x = (i * PIXEL_PITCH) - offset
-            y = (j * PIXEL_PITCH) - offset
+    for i in range(grid_size):
+        for j in range(grid_size):
+            x = (i * pixel_pitch) - offset
+            y = (j * pixel_pitch) - offset
             square = patches.Rectangle(
                 (x, y),
-                PIXEL_PITCH,
-                PIXEL_PITCH,
+                pixel_pitch,
+                pixel_pitch,
                 edgecolor="black",
                 facecolor="gold",
                 alpha=0.5,
@@ -93,10 +101,10 @@ def draw_grid_figure(PIXEL_PITCH=1.894, GRID_SIZE=11):
     
     return fig, ax
 
-hole_positions, x_mesh, y_mesh = mask_hole_positions(3*PIXEL_PITCH, MASK_POSITION[0], MASK_POSITION[1])
+hole_positions, x_mesh, y_mesh = mask_hole_positions(HOLE_PITCH, MASK_POSITION[0], MASK_POSITION[1])
 x_projected, y_projected, diameters = projection(h, H, POINT_SOURCE, MASK_POSITION)
 
-fig, ax = draw_grid_figure(PIXEL_PITCH=1.894, GRID_SIZE=11)
+fig, ax = draw_grid_figure()
 
 ax.plot([POINT_SOURCE[0]], [POINT_SOURCE[1]], color="red", marker="x", markersize=10)
 
@@ -113,7 +121,7 @@ for x_projected_i, y_projected_i, di in zip(x_projected.flatten(), y_projected.f
     plt.gca().add_artist(circle)
 
 ax.grid(alpha=0.6)
-ax.set_title("Projection of mask holes")
+ax.set_title("Projection of mask holes. blue: mask holes, red: projected radiation")
 ax.set_xlabel("x (mm)")
 ax.set_ylabel("y (mm)")
 
