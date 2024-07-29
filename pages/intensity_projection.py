@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import plotly.graph_objects as go
 
+with st.expander("Picture"):
+    st.image("assets/intensity_projection.png", use_column_width=True)
+
 with st.expander("Constants"):
     PIXEL_PITCH = st.number_input("Pixel pitch (mm)", value=1.894, key="pixel_pitch")
 
