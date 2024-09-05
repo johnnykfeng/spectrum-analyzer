@@ -12,6 +12,8 @@ class ExtractModuleStreamlit:
         self.csv_file = csv_file  # file path of the csv file from H3D software
         self.target_string = "H3D_Pixel"  # string to search for in the csv file
         self.number_of_pixels = 121  # determines number of rows to extract from csv file
+        self.n_pixels_x = 11  # number of pixels in x-direction
+        self.n_pixels_y = 11  # number of pixels in y-direction
         self.line_numbers = []
         self.dataframe = None  # output of extract_module2df
         self.df_list = []  # output of extract_all_modules2df
