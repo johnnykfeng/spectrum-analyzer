@@ -17,12 +17,15 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+import plotly.express as px
+
 
 @st.cache_data
 def convert_df_to_csv(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     df_download = df.drop(columns=["array_bins"])
     return df_download.to_csv().encode("utf-8")
+
 
 app_defaults = {
     "Am241": {
@@ -53,7 +56,8 @@ st.caption("Last updated: 2024-07-12")
 
 
 color_scale = st.sidebar.selectbox(
-    "Choose a color theme: ", ("Viridis", "Plasma", "Inferno", "Jet"),
+    "Choose a color theme: ",
+    ("Viridis", "Plasma", "Inferno", "Jet"),
 )
 
 reverse_color_theme = st.sidebar.checkbox("Reverse color theme")
@@ -62,7 +66,8 @@ if reverse_color_theme:
     color_scale = color_scale + "_r"
 
 count_type = st.sidebar.radio(
-    "Choose a data type: ", ("total_count", "peak_count", "non_peak_count", "pixel_id", "bin_max")
+    "Choose a data type: ",
+    ("total_count", "peak_count", "non_peak_count", "pixel_id", "bin_max"),
 )
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
@@ -78,9 +83,7 @@ with col[1]:
     peak_halfwidth_input = st.number_input(
         "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
     )
-    peak_threshold_input = st.number_input(
-        "peak threshold", value=60, step=1
-    )
+    peak_threshold_input = st.number_input("peak threshold", value=60, step=1)
 
 with col[2]:
     uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
@@ -102,7 +105,9 @@ def parse_uploaded_file(
     if bin_peak_input is not None and peak_halfwidth_input is not None:
         peak_halfwidth = peak_halfwidth_input
         df_transformed_list = TD.add_peak_counts_all(bin_peak_input, peak_halfwidth)
-        df_transformed_list = TD.add_bin_max_all(bin_peak_input, peak_halfwidth, peak_threshold)
+        df_transformed_list = TD.add_bin_max_all(
+            bin_peak_input, peak_halfwidth, peak_threshold
+        )
 
     x_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
     y_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
@@ -167,8 +172,11 @@ if uploaded_file is not None:
         heights,
         df_transformed_list,
     ) = parse_uploaded_file(
-        uploaded_file, bin_peak_input, peak_halfwidth_input, 
-        peak_threshold_input, modules_to_skip=0
+        uploaded_file,
+        bin_peak_input,
+        peak_halfwidth_input,
+        peak_threshold_input,
+        modules_to_skip=0,
     )
 
     with st.expander("Data Info", expanded=False):
@@ -189,7 +197,7 @@ if uploaded_file is not None:
 
         with right_top_panel:
             num_pixels_placeholder = st.empty()
-            
+
             # create a slider to select the module
             module_index = st.slider("Select a module:", 0, N_MODULES - 1, 0)
             heatmap_fig = create_pixelized_heatmap(
@@ -197,6 +205,7 @@ if uploaded_file is not None:
                 count_type=count_type,
                 normalization=normalize_check,
                 color_scale=color_scale,
+                text_auto=".3d",
             )
             num_pixels = num_pixels_placeholder.number_input(
                 "Number of pixels to display",
@@ -207,11 +216,12 @@ if uploaded_file is not None:
             )
             st.session_state.num_pixels = num_pixels
 
-            st.write(f"X: {x_positions_mm[module_index]} mm,  Y: {y_positions_mm[module_index]} mm")
+            st.write(
+                f"X: {x_positions_mm[module_index]} mm,  Y: {y_positions_mm[module_index]} mm"
+            )
             # st.plotly_chart(heatmap_fig)
 
         with left_top_panel:
-
             pixel_selections = []
             for c, column in enumerate(st.columns(num_pixels)):
                 with column:
@@ -220,10 +230,18 @@ if uploaded_file is not None:
                         st.session_state.pixel_indices
                     ):
                         x_index = pixel_selectbox(
-                            "X", c, module_index, "spectrum", st.session_state.pixel_indices[c][0], 
+                            "X",
+                            c,
+                            module_index,
+                            "spectrum",
+                            st.session_state.pixel_indices[c][0],
                         )
                         y_index = pixel_selectbox(
-                            "Y", c, module_index, "spectrum", st.session_state.pixel_indices[c][1]
+                            "Y",
+                            c,
+                            module_index,
+                            "spectrum",
+                            st.session_state.pixel_indices[c][1],
                         )
                     else:
                         x_index = pixel_selectbox("X", c, module_index, "spectrum")
@@ -253,7 +271,7 @@ if uploaded_file is not None:
 
             pixel_spectrum_figure = create_spectrum_pixel(
                 df_transformed_list[module_index],
-                True, # include_avg_spectrum
+                True,  # include_avg_spectrum
                 *st.session_state.pixel_indices,
                 bin_peak=bin_peak_input,
                 peak_halfwidth=peak_halfwidth_input,
@@ -270,9 +288,10 @@ if uploaded_file is not None:
                 title=f"Module #: {module_index}, X-stage: {relative_x_positions[module_index]} px,  Y-stage: {relative_y_positions[module_index]} px"
             )
             st.plotly_chart(heatmap_fig)
-        with plot_columns[1]:    
-            pixel_spectrum_figure.update_layout(title="Select Pixel Spectrum",
-                                                height=550)
+        with plot_columns[1]:
+            pixel_spectrum_figure.update_layout(
+                title="Select Pixel Spectrum", height=550
+            )
             st.plotly_chart(pixel_spectrum_figure)
 
     with st.expander("Average Spectrum", expanded=False):
@@ -285,14 +304,12 @@ if uploaded_file is not None:
         )
         st.plotly_chart(spectrum_avg_fig)
 
-
     axes_choice = st.radio(
         "sweep axis",
         ("X-abs", "Y-abs", "X-relative", "Y-relative"),
         horizontal=True,
         key="axes_choice",
     )
-
 
     with st.expander("SWEEP ANALYSIS", expanded=True):
         relative_x_positions = [round(x - x_positions[1], 2) for x in x_positions]
@@ -373,6 +390,7 @@ if uploaded_file is not None:
             data_range[0],
             data_range[1],
             x_values[axes_choice],
+            discrete_colormap=px.colors.qualitative.T10,
             *pixel_selections,
         )
         count_sweep.update_layout(xaxis_title=f"{axes_choice} Stage Position (px)")
@@ -396,10 +414,18 @@ if uploaded_file is not None:
                     st.session_state.pixel_indices
                 ):
                     x_index = pixel_selectbox(
-                        "X", c, 101, "counts_sweep", st.session_state.pixel_indices[c][0]
+                        "X",
+                        c,
+                        101,
+                        "counts_sweep",
+                        st.session_state.pixel_indices[c][0],
                     )
                     y_index = pixel_selectbox(
-                        "Y", c, 102, "counts_sweep", st.session_state.pixel_indices[c][1]
+                        "Y",
+                        c,
+                        102,
+                        "counts_sweep",
+                        st.session_state.pixel_indices[c][1],
                     )
                 else:
                     x_index = pixel_selectbox("X", c, 101, "counts_sweep")
@@ -411,6 +437,15 @@ if uploaded_file is not None:
         cols = st.columns([0.35, 0.65], gap="large")
         with cols[0]:
             include_summed_counts = st.checkbox("Include summed counts", value=True)
+            include_markers = st.checkbox("Include markers", value=True)
+            count_max = st.number_input(
+                "Max Counts",
+                value=35000,
+                step=1000,
+                max_value=None,
+                key="count_max_sweep_multi",
+            )
+
         with cols[1]:
             data_range_2 = st.slider(
                 "Modules to include:",
@@ -427,14 +462,15 @@ if uploaded_file is not None:
             data_range_2[0],
             data_range_2[1],
             x_values[axes_choice],
+            include_markers=include_markers,
             include_summed_counts=include_summed_counts,
             *st.session_state.pixel_indices_sweep,
+            y_range=[0, count_max],
         )
 
         count_sweep_multi_pixel.update_layout(
-            height=800, 
-            xaxis_title=f"{axes_choice} Stage Position (px)"
+            height=800,
+            xaxis_title=f"{axes_choice} Stage Position (px)",
         )
-  
 
         st.plotly_chart(count_sweep_multi_pixel)

@@ -2,6 +2,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
+DISCRETE_COLORS = px.colors.qualitative.Light24
+# DISCRETE_COLORS = px.colors.qualitative.Dark24
 
 def calculate_peak_count(array: np.array, peak_bin: int, peak_halfwidth=25):
     """Calculate the counts in a peak given the array and the peak bin number."""
@@ -133,7 +135,8 @@ def create_spectrum_pixel(
 ):
     fig = go.Figure()
 
-    for pixel_index in pixel_indices:
+    for p_idx, pixel_index in enumerate(pixel_indices):
+    # for pixel_index in pixel_indices:
         if isinstance(pixel_index, tuple):
             x_index, y_index = pixel_index
         else:
@@ -147,6 +150,8 @@ def create_spectrum_pixel(
                     x=np.arange(1, len(array_bins) + 1),
                     y=array_bins,
                     name=f"Pixel ({x_index}, {y_index})",
+                    mode="lines",
+                    line_color = DISCRETE_COLORS[p_idx],
                 )
             )
             if "bin_peak" in kwargs:
@@ -249,7 +254,9 @@ def create_count_sweep(
     max_data_range,
     x_values,
     *pixel_indices,
+    include_markers = True,
     include_summed_counts = False,
+    discrete_colormap = px.colors.qualitative.Light24,
     **kwargs,
 ):
     df_list = df_list[min_data_range:max_data_range]
@@ -258,7 +265,8 @@ def create_count_sweep(
     fig = go.Figure()
 
     counts_per_pixel = []
-    for pixel_index in pixel_indices:
+    # for pixel_index in pixel_indices:
+    for p_idx, pixel_index in enumerate(pixel_indices):
         if isinstance(pixel_index, tuple):
             x_index, y_index = pixel_index
         else:
@@ -277,25 +285,27 @@ def create_count_sweep(
                 y=counts,
                 mode="lines",
                 line=dict(
-                    width=1.5,
+                    width=3,
                     #   dash="dash"
                 ),
+                line_color = discrete_colormap[p_idx],
                 name=f"Pixel ({x_index}, {y_index})",
             )
         )
 
-        fig.add_trace( # markers
-            go.Scatter(
-                x=x_values,
-                y=counts,
-                mode="markers",
-                marker=dict(
-                    size=8, color=x_values, colorscale="RdBu_r", showscale=False
-                ),
-                showlegend=True,
-                name=f"Pixel ({x_index}, {y_index})",
+        if include_markers:
+            fig.add_trace( # markers
+                go.Scatter(
+                    x=x_values,
+                    y=counts,
+                    mode="markers",
+                    marker=dict(
+                        size=8, color=x_values, colorscale="RdBu_r", showscale=False
+                    ),
+                    showlegend=True,
+                    name=f"Pixel ({x_index}, {y_index})",
+                )
             )
-        )
     if include_summed_counts:
         fig.add_trace(  # white dashed line that sum all the count lines
             go.Scatter(
@@ -325,6 +335,11 @@ def create_count_sweep(
         griddash="dash",
     )
 
+    if "x_range" in kwargs:
+        fig = update_x_axis_range(fig, kwargs["x_range"])
+    if "y_range" in kwargs:
+        fig = update_y_axis_range(fig, kwargs["y_range"])
+
     return fig
 
 def create_surface_plot_3d(figure, color_scale):
@@ -349,3 +364,8 @@ def create_surface_plot_3d(figure, color_scale):
     )
 
     return surface_plot_3d
+
+
+if __name__ == "__main__":
+    # DISCRETE_COLORS = px.colors.qualitative.Light24
+    print(DISCRETE_COLORS)
