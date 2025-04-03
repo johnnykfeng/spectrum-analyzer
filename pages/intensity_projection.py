@@ -17,7 +17,7 @@ with col[0]:
 with col[1]:
     colormap = st.selectbox("Colormap", ["jet", "viridis", "plasma", "inferno"])
 with col[2]:
-    add_grid = st.checkbox("Add grid")
+    add_grid = st.checkbox("Add grid", value=True)
     fixed_color_limits = st.checkbox("Fixed color limits")
 
 def draw_grid_figure(pixel_pitch=st.session_state["pixel_pitch"], 
