@@ -165,13 +165,14 @@ with col[1]:
     if "counts_max_pixel" not in st.session_state:
         st.session_state.counts_max_pixel = app_defaults[source]["max_counts"]
 with col[2]:
-    data_source = st.radio("Data source:", ("Uploaded file", "Sample data"), horizontal=True, index=1)
+    data_source = st.radio("Data source:", ("Sample data", "Uploaded file"), horizontal=True, index=0)
     if data_source == "Uploaded file":
         uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
 
 if data_source == "Sample data":
-    data_file= r"sample_data\2024-07-11_masksweep_30min_Co57.csv"
-    # data_file = r"sample_data\co57_masksweep_10min_2024-06-28_f.csv"
+    with col[2]:
+        data_file = st.selectbox("Select a sample data file:", ("Co57_masksweep_30min_2024-07-11.csv", "Co57_masksweep_10min_2024-06-28_f.csv"), index=0)
+        data_file = r"sample_data/" + data_file
     st.session_state.start_analysis = True
 elif data_source == "Uploaded file":
     if uploaded_file is not None:
