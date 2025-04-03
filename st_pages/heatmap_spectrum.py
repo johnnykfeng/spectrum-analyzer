@@ -16,22 +16,22 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from st_pages import Page, Section, show_pages, add_page_title, hide_pages
+# from st_pages import Page, Section, show_pages, add_page_title, hide_pages
 
-show_pages([
-    Page("pages/full_data_dashboard.py", 
-         "Full Data Dashboard", 
-         ":chart_with_upwards_trend:"),
-    Page("app.py", 
-         "Heatmap and Spectrum Analysis", 
-         "📚"),
-    Page("pages/hole_projection.py",
-            "Hole Projection",
-            ":mag:"),
-    Page("pages/intensity_projection.py",
-            "Intensity Projection",
-            ":bulb:"),
-])
+# show_pages([
+#     Page("pages/full_data_dashboard.py", 
+#          "Full Data Dashboard", 
+#          ":chart_with_upwards_trend:"),
+#     Page("app.py", 
+#          "Heatmap and Spectrum Analysis", 
+#          "📚"),
+#     Page("pages/hole_projection.py",
+#             "Hole Projection",
+#             ":mag:"),
+#     Page("pages/intensity_projection.py",
+#             "Intensity Projection",
+#             ":bulb:"),
+# ])
 
 app_defaults = {
     "Am241": {
