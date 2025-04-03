@@ -141,7 +141,7 @@ if "pixel_indices_sweep" not in st.session_state:
     st.session_state.pixel_indices_sweep = []
 
 if "num_pixels" not in st.session_state:
-    st.session_state.num_pixels = 2
+    st.session_state.num_pixels = 4
 
 if "num_pixels_sweep" not in st.session_state:
     st.session_state.num_pixels_sweep = 4
@@ -152,7 +152,7 @@ if "start_analysis" not in st.session_state:
 # st.warning("Only File uploader is working for now")
 col = st.columns([0.25, 0.25, 0.5], gap="large")
 with col[0]:
-    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"))
+    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"), index=1)
 with col[1]:
     bin_peak_input = st.number_input(
         "approximate bin peak", step=1, value=app_defaults[source]["bin_peak"]
@@ -170,7 +170,6 @@ with col[2]:
         uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
 
 if data_source == "Sample data":
-    st.info("Loading sample data...")
     data_file= r"sample_data\2024-07-11_masksweep_30min_Co57.csv"
     # data_file = r"sample_data\co57_masksweep_10min_2024-06-28_f.csv"
     st.session_state.start_analysis = True
@@ -209,7 +208,6 @@ if st.session_state.start_analysis:
             heights,
             df_transformed_list,
         ) = result
-        # st.write(N_MODULES, N_PIXELS_X, N_PIXELS_Y, x_positions, y_positions, x_positions_mm, y_positions_mm, heights, df_transformed_list)
 
     # create a slider to select the module
     # module_index = st.sidebar.slider("Select a module:", 0, N_MODULES - 1, 0)
@@ -224,7 +222,7 @@ if st.session_state.start_analysis:
             num_pixels_placeholder = st.empty()
 
             # create a slider to select the module
-            module_index = st.slider("Select a module:", 0, N_MODULES - 1, 0)
+            module_index = st.slider("Select a module:", 0, N_MODULES - 1, value=1)
             heatmap_fig = create_pixelized_heatmap(
                 df_transformed_list[module_index],
                 count_type=count_type,
@@ -334,6 +332,7 @@ if st.session_state.start_analysis:
         ("X-abs", "Y-abs", "X-relative", "Y-relative"),
         horizontal=True,
         key="axes_choice",
+        index=3,
     )
 
     with st.expander("SWEEP ANALYSIS", expanded=True):
@@ -354,9 +353,9 @@ if st.session_state.start_analysis:
         with sub_columns[0]:
             subsub_columns = st.columns([1, 1])
             with subsub_columns[0]:
-                x_choice = pixel_selectbox("X", "Pixel", 101, "sweep")
+                x_choice = pixel_selectbox("X", "Pixel", 101, "sweep", default_index=2)
             with subsub_columns[1]:
-                y_choice = pixel_selectbox("Y", "Pixel", 102, "sweep")
+                y_choice = pixel_selectbox("Y", "Pixel", 102, "sweep", default_index=8)
             pixel_selections.append((x_choice, y_choice))
             range_slider_x = st.slider(
                 "X-range slider (bins)",
