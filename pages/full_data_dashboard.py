@@ -72,31 +72,20 @@ count_type = st.sidebar.radio(
 
 normalize_check = st.sidebar.checkbox("Normalize heatmap")
 
-# st.warning("Only File uploader is working for now")
-col = st.columns([0.25, 0.25, 0.5], gap="large")
-with col[0]:
-    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"))
-with col[1]:
-    bin_peak_input = st.number_input(
-        "approximate bin peak", step=1, value=app_defaults[source]["bin_peak"]
-    )
-    peak_halfwidth_input = st.number_input(
-        "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
-    )
-    peak_threshold_input = st.number_input("peak threshold", value=60, step=1)
-
-with col[2]:
-    uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
-
 
 @st.cache_data
 def parse_uploaded_file(
-    uploaded_file, bin_peak_input, peak_halfwidth, peak_threshold, modules_to_skip=0
+    uploaded_file, bin_peak_input, peak_halfwidth, peak_threshold, modules_to_skip=0, data_source=None
 ):
-    st.write(uploaded_file.name)
-    EM = ExtractModuleStreamlit(uploaded_file)
+    EM = ExtractModuleStreamlit(uploaded_file, data_source)
 
     extracted_df_list = EM.extract_all_modules2df()
+    
+    # Check if any modules were found in the file
+    if not extracted_df_list:
+        st.error("No modules found in the file. Please check if the file contains 'H3D_Pixel' data.")
+        return None, None, None, None, None, None, None, None, None
+    
     extracted_df_list = extracted_df_list[modules_to_skip:]
     N_MODULES = EM.number_of_modules - modules_to_skip
 
@@ -109,13 +98,13 @@ def parse_uploaded_file(
             bin_peak_input, peak_halfwidth, peak_threshold
         )
 
-    x_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:")
-    y_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:")
-    x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_px:")
-    y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_px:")
+    x_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_x_mm:", data_source)
+    y_positions_mm = EM.extract_metadata_list(EM.csv_file, "stage_y_mm:", data_source)
+    x_positions = EM.extract_metadata_list(EM.csv_file, "stage_x_px:", data_source)
+    y_positions = EM.extract_metadata_list(EM.csv_file, "stage_y_px:", data_source)
     x_positions = [float(x) for x in x_positions]  # convert list of str to float
     y_positions = [float(y) for y in y_positions]  # convert list of str to float
-    heights = EM.extract_metadata_list(EM.csv_file, "height:")
+    heights = EM.extract_metadata_list(EM.csv_file, "height:", data_source)
     # st.write(x_positions, y_positions, heights)
 
     return (
@@ -157,34 +146,70 @@ if "num_pixels" not in st.session_state:
 if "num_pixels_sweep" not in st.session_state:
     st.session_state.num_pixels_sweep = 4
 
-if "counts_max_pixel" not in st.session_state:
-    st.session_state.counts_max_pixel = app_defaults[source]["max_counts"]
+if "start_analysis" not in st.session_state:
+    st.session_state.start_analysis = False
 
-if uploaded_file is not None:
-    (
-        N_MODULES,
-        N_PIXELS_X,
-        N_PIXELS_Y,
-        x_positions,
-        y_positions,
-        x_positions_mm,
-        y_positions_mm,
-        heights,
-        df_transformed_list,
-    ) = parse_uploaded_file(
-        uploaded_file,
+# st.warning("Only File uploader is working for now")
+col = st.columns([0.25, 0.25, 0.5], gap="large")
+with col[0]:
+    source = st.radio(":radioactive_sign: Radiation Source", ("Am241", "Co57", "Cs137"))
+with col[1]:
+    bin_peak_input = st.number_input(
+        "approximate bin peak", step=1, value=app_defaults[source]["bin_peak"]
+    )
+    peak_halfwidth_input = st.number_input(
+        "peak halfwidth", value=app_defaults[source]["peak_halfwidth"], step=1
+    )
+    peak_threshold_input = st.number_input("peak threshold", value=60, step=1)
+
+    if "counts_max_pixel" not in st.session_state:
+        st.session_state.counts_max_pixel = app_defaults[source]["max_counts"]
+with col[2]:
+    data_source = st.radio("Data source:", ("Uploaded file", "Sample data"), horizontal=True, index=1)
+    if data_source == "Uploaded file":
+        uploaded_file = st.file_uploader("Upload a CSV file 💾", type=["csv"])
+
+if data_source == "Sample data":
+    st.info("Loading sample data...")
+    data_file= r"sample_data\2024-07-11_masksweep_30min_Co57.csv"
+    # data_file = r"sample_data\co57_masksweep_10min_2024-06-28_f.csv"
+    st.session_state.start_analysis = True
+elif data_source == "Uploaded file":
+    if uploaded_file is not None:
+        data_file = uploaded_file
+        st.session_state.start_analysis = True
+    else:
+        st.warning("Please upload a CSV file")
+        st.session_state.start_analysis = False
+    
+    
+    
+if st.session_state.start_analysis:
+    result = parse_uploaded_file(
+        data_file,
         bin_peak_input,
         peak_halfwidth_input,
         peak_threshold_input,
         modules_to_skip=0,
+        data_source = data_source
     )
-
-    with st.expander("Data Info", expanded=False):
-        st.write(f"Number of modules: {N_MODULES}")
-        st.write(f"Stage X position: {x_positions}")
-        st.write(f"Stage Y position: {y_positions}")
-        st.write(f"Height: {heights}")
-        st.write(df_transformed_list[1])
+    
+    # Check if the result is None (no modules found)
+    if result[0] is None:
+        st.session_state.start_analysis = False
+    else:
+        (
+            N_MODULES,
+            N_PIXELS_X,
+            N_PIXELS_Y,
+            x_positions,
+            y_positions,
+            x_positions_mm,
+            y_positions_mm,
+            heights,
+            df_transformed_list,
+        ) = result
+        # st.write(N_MODULES, N_PIXELS_X, N_PIXELS_Y, x_positions, y_positions, x_positions_mm, y_positions_mm, heights, df_transformed_list)
 
     # create a slider to select the module
     # module_index = st.sidebar.slider("Select a module:", 0, N_MODULES - 1, 0)
