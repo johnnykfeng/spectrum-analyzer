@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.express as px
 
 from data_handling_modules import TransformDf, ExtractModule, ExtractModuleStreamlit
 
@@ -17,7 +18,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-import plotly.express as px
 
 
 @st.cache_data
@@ -52,7 +52,7 @@ app_defaults = {
 }
 
 st.title(":chart_with_upwards_trend: Full Data Dashboard")
-st.caption("Last updated: 2024-07-12")
+st.caption("Last updated: 2025-04-07")
 
 
 color_scale = st.sidebar.selectbox(
@@ -148,6 +148,14 @@ if "num_pixels_sweep" not in st.session_state:
 
 if "start_analysis" not in st.session_state:
     st.session_state.start_analysis = False
+
+with st.expander("Mask experiment setup", expanded=True):
+    st.markdown("""
+    ### Description of mask experiment
+    This is a dashboard for analyzing the data from our shadow mask experiment in our radiation detector. We use a tungsten mask of 4x4 holes to localized the light into small sub-pixel areas of our detector, which negates the effects of neigboring pixels and isolates the detector response to a single pixel. We want to see the energy spectrum and count rate for each pixel as the mask traverses and illuminates different areas and pixels of the detector.  
+    """)
+    st.image("assets/mask_experiment.png", width=400)
+
 
 # st.warning("Only File uploader is working for now")
 col = st.columns([0.25, 0.25, 0.5], gap="large")
@@ -369,7 +377,7 @@ if st.session_state.start_analysis:
 
         with sub_columns[1]:
             data_range = st.slider(
-                "Modules to include:",
+                "Mask positions:",
                 min_value=0,
                 max_value=N_MODULES,
                 value=(1, N_MODULES),
@@ -418,7 +426,7 @@ if st.session_state.start_analysis:
             discrete_colormap=px.colors.qualitative.T10,
             *pixel_selections,
         )
-        count_sweep.update_layout(xaxis_title=f"{axes_choice} Stage Position (px)")
+        count_sweep.update_layout(xaxis_title=f"{axes_choice} Mask Position (px)")
         count_sweep_plot_placeholder.plotly_chart(count_sweep)
 
     with st.expander("SWEEP MULTIPLE PIXELS", expanded=True):
@@ -495,7 +503,7 @@ if st.session_state.start_analysis:
 
         count_sweep_multi_pixel.update_layout(
             height=800,
-            xaxis_title=f"{axes_choice} Stage Position (px)",
+            xaxis_title=f"{axes_choice} Mask Position (px)",
         )
 
         st.plotly_chart(count_sweep_multi_pixel)
