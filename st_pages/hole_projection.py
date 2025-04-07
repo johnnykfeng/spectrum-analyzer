@@ -13,7 +13,7 @@ with st.expander("Constants"):
 
 # st.write(st.session_state["hole_diameter"])
     
-with st.expander("Schematic drawing of geometry:"):
+with st.expander("Schematic drawing of geometry:", expanded=True):
     # show image of assets/hole_projection_fig.png
     st.image("assets/hole_projection_fig.png", use_column_width=True)
     

@@ -5,8 +5,16 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import plotly.graph_objects as go
 
-with st.expander("Picture"):
-    st.image("assets/intensity_projection.png", use_column_width=True)
+with st.expander("**Description**", expanded=True):
+    st.markdown("""
+    This is a dashboard for simulating the intensity projection of a point source on a flat plane. 
+    The intensity is calculated using the formula:
+    $$
+    I(x,y) = \\frac{I_0}{4 \pi r^2}
+    $$
+    where $I_0$ is the intensity at the source and $r$ is the distance from the source to the point $(x,y)$.
+    """)
+    st.image("assets/intensity_projection.png", width=400)
 
 with st.expander("Constants"):
     PIXEL_PITCH = st.number_input("Pixel pitch (mm)", value=1.894, key="pixel_pitch")
