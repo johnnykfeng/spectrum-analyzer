@@ -210,20 +210,18 @@ if st.session_state.start_analysis:
             df_transformed_list,
         ) = result
 
-    # create a slider to select the module
-    # module_index = st.sidebar.slider("Select a module:", 0, N_MODULES - 1, 0)
 
     with st.expander("HEATMAP and PIXEL SPECTRUM", expanded=True):
         relative_x_positions = [round(x - x_positions[1], 2) for x in x_positions]
         relative_y_positions = [round(y - y_positions[1], 2) for y in y_positions]
 
-        right_top_panel, left_top_panel = st.columns([1, 1])
+        left_top_panel, right_top_panel = st.columns([1, 1])
 
-        with right_top_panel:
+        with left_top_panel:
             num_pixels_placeholder = st.empty()
 
             # create a slider to select the module
-            module_index = st.slider("Select a module:", 0, N_MODULES - 1, value=1)
+            module_index = st.slider("Mask position:", 0, N_MODULES - 1, value=1)
             heatmap_fig = create_pixelized_heatmap(
                 df_transformed_list[module_index],
                 count_type=count_type,
@@ -245,8 +243,10 @@ if st.session_state.start_analysis:
             )
             # st.plotly_chart(heatmap_fig)
 
-        with left_top_panel:
+        with right_top_panel:
             pixel_selections = []
+            default_x_index = [2, 2, 2, 2, 2, 2, 2, 2]
+            default_y_index = [4, 5, 6, 7, 8, 9, 10, 11]
             for c, column in enumerate(st.columns(num_pixels)):
                 with column:
                     # check if st.session_state.pixel_indices is not empty
@@ -258,14 +258,14 @@ if st.session_state.start_analysis:
                             c,
                             module_index,
                             "spectrum",
-                            st.session_state.pixel_indices[c][0],
+                            default_x_index[c],
                         )
                         y_index = pixel_selectbox(
                             "Y",
                             c,
                             module_index,
                             "spectrum",
-                            st.session_state.pixel_indices[c][1],
+                            default_y_index[c],
                         )
                     else:
                         x_index = pixel_selectbox("X", c, module_index, "spectrum")
@@ -465,7 +465,7 @@ if st.session_state.start_analysis:
             include_markers = st.checkbox("Include markers", value=True)
             count_max = st.number_input(
                 "Max Counts",
-                value=35000,
+                value=70000,
                 step=1000,
                 max_value=None,
                 key="count_max_sweep_multi",
